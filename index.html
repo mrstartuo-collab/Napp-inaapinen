@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@500;600;700;800&display=swap">
 <style>
-/* Layout: one-screen toy. Top bar (name · modes · toggles), stat chips, a stage where a wooden ABC block pops in under a confetti canvas, and the Finnish keyboard mirrored at the bottom. Day sky in light theme, aurora night in dark. */
+/* Layout: one-screen toy. Top bar (name · player · badges · toggles) over mode tabs, stat chips, a stage where a wooden ABC block pops in under a confetti canvas, and the Finnish keyboard mirrored at the bottom. Day sky in light theme, aurora night in dark. */
 :root{
   --bg:#D3E7F5;
   --glow-a:#F6FBFF;
@@ -25,6 +25,10 @@
   --on-yellow:#2A1B00;
   --ok:#2C9850;
   --warn:#D4433A;
+  --snow:#FFFFFF;
+  --dyn-a:#C8372D; --dyn-b:#A92B22; --dyn-band:#6E4A2A; --dyn-label:#F6E7C8;
+  --fuse:#9A7B55; --spark:#FFE066; --spark-glow:#FF8A1F;
+  --flash:#FFF6DA;
   --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
   --letter:"Andika","Verdana",system-ui,sans-serif;
 }
@@ -33,7 +37,7 @@
     --bg:#0C172E; --glow-a:#14504B; --glow-b:#33265E; --surface:#16264A; --surface-2:#0F1E3A;
     --ink:#E9F1FF; --muted:#9CB0D2; --line:#2C4372; --shadow:rgba(0,0,0,.45); --rim:rgba(255,255,255,.20);
     --t1:#FF6555; --t2:#FFC63C; --t3:#4CC473; --t4:#5A99F2; --t5:#A67FF3; --t6:#FF9349;
-    --on-toy:#0C172E; --on-yellow:#2A1B00; --ok:#47C06C; --warn:#FF6B5D;
+    --on-toy:#0C172E; --on-yellow:#2A1B00; --ok:#47C06C; --warn:#FF6B5D; --snow:#CFDDF0;
     color-scheme:dark;
   }
 }
@@ -41,7 +45,7 @@
   --bg:#0C172E; --glow-a:#14504B; --glow-b:#33265E; --surface:#16264A; --surface-2:#0F1E3A;
   --ink:#E9F1FF; --muted:#9CB0D2; --line:#2C4372; --shadow:rgba(0,0,0,.45); --rim:rgba(255,255,255,.20);
   --t1:#FF6555; --t2:#FFC63C; --t3:#4CC473; --t4:#5A99F2; --t5:#A67FF3; --t6:#FF9349;
-  --on-toy:#0C172E; --on-yellow:#2A1B00; --ok:#47C06C; --warn:#FF6B5D;
+  --on-toy:#0C172E; --on-yellow:#2A1B00; --ok:#47C06C; --warn:#FF6B5D; --snow:#CFDDF0;
   color-scheme:dark;
 }
 
@@ -67,36 +71,43 @@ body{
 .app{height:100%;display:flex;flex-direction:column;max-width:1100px;margin-inline:auto}
 
 /* top bar */
-.bar{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px 16px;padding-block:10px 4px}
+.bar{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px 12px;padding-block:10px 4px}
 .brand{display:flex;align-items:center;gap:8px;min-width:0}
 .brand .logo{font-size:28px;line-height:1}
-.brand h1{margin:0;font:800 clamp(20px,2.6vw,28px)/1 var(--display);letter-spacing:-.01em;white-space:nowrap}
+.brand h1{margin:0;font:800 clamp(20px,2.4vw,26px)/1 var(--display);letter-spacing:-.01em;white-space:nowrap}
 .brand h1 span{color:var(--t1)}
-.modes{justify-self:center;display:flex;gap:2px;padding:4px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line)}
+.modes{grid-column:1 / -1;grid-row:2;justify-self:center;display:flex;gap:2px;padding:4px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);max-width:100%}
 .modes button{border:0;background:transparent;color:var(--muted);font:700 15px/1 var(--display);padding:9px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
 .modes button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 2px 0 var(--line)}
-.tools{display:flex;gap:6px;justify-content:flex-end}
+.modes .s{display:none}
+.tools{grid-column:2;grid-row:1;display:flex;gap:6px;justify-content:flex-end;align-items:center}
 .tool{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 14px/1 var(--display);padding:7px 10px;border-radius:999px;cursor:pointer;min-height:36px}
 .tool[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.tool svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
-.tool .case{font:800 15px/1 var(--letter);letter-spacing:.02em}
+.tool svg{width:18px;height:18px;flex:none;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.tool .nm{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tool .cnt{font-variant-numeric:tabular-nums}
+.tool.icon{padding:7px 9px}
 
 /* stats */
 .stats{display:flex;flex-wrap:wrap;justify-content:center;align-items:stretch;gap:8px;padding-block:6px}
 .chip{display:flex;flex-direction:column;justify-content:center;min-width:72px;padding:4px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
-.chip .k{font:700 11px/1.3 var(--display);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
-.chip .v{font:800 22px/1.15 var(--display);font-variant-numeric:tabular-nums}
-.chip.wide{min-width:150px}
+.chip .k{font:700 11px/1.3 var(--display);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.chip .v{font:800 22px/1.15 var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip.wide{min-width:140px}
 .chip.low .v{color:var(--warn)}
 .meter{display:block;height:6px;margin-top:3px;border-radius:3px;background:var(--surface-2);overflow:hidden}
 .meter i{display:block;height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,var(--t1),var(--t6),var(--t2),var(--t3),var(--t4),var(--t5));transition:width .3s}
+.meter.fuse i{background:linear-gradient(90deg,var(--fuse),var(--t6),var(--t1))}
 .btn{border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px/1 var(--display);padding:10px 16px;border-radius:999px;cursor:pointer}
 .btn.small{align-self:center;font-size:14px;padding:8px 12px}
 
 /* stage */
 .stage{position:relative;flex:1 1 auto;min-height:0;container-type:size}
-#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
-.center{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(6px,3cqh,18px);text-align:center}
+#snow{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.center{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(6px,3cqh,18px);text-align:center;pointer-events:none}
+.center > *{pointer-events:auto}
+body[data-mode="snow"] .center{justify-content:flex-start;padding-top:6px;z-index:2;pointer-events:none}
+body[data-mode="snow"] .prompt{font-size:14px;opacity:.85}
 .prompt{margin:0;font:700 clamp(15px,4.5cqh,24px)/1.2 var(--display);color:var(--muted);text-wrap:balance;max-width:92%}
 .focus-pill{display:none;font:700 14px/1 var(--display);background:var(--t2);color:var(--on-yellow);padding:7px 12px;border-radius:999px}
 body.nofocus .focus-pill{display:inline-block}
@@ -123,16 +134,29 @@ body.nofocus .focus-pill{display:inline-block}
 .word b{color:color-mix(in srgb, var(--c) 78%, var(--ink))}
 .word .note{font:600 .62em/1.2 var(--display);color:var(--muted)}
 
-.wv{display:flex;flex-direction:column;align-items:center;gap:clamp(8px,3cqh,22px);max-width:100%}
-.wemoji{font-size:clamp(52px,26cqh,140px);line-height:1;transform:rotate(var(--r,0deg))}
-.tiles{--n:6;display:flex;gap:6px;justify-content:center;max-width:100%}
+/* words view */
+.wv{display:flex;flex-direction:column;align-items:center;gap:clamp(6px,2.4cqh,18px);max-width:100%}
+.race-cap{font:700 12px/1.2 var(--display);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.race{position:relative;width:min(520px,92cqw);display:grid;gap:3px;padding-right:22px}
+.lane{position:relative;height:clamp(16px,5.5cqh,26px);border-bottom:2px dashed var(--line)}
+.car{position:absolute;left:0;bottom:1px;height:100%;aspect-ratio:40/22;transition:transform .25s linear}
+.car svg{display:block;width:100%;height:100%}
+.car.me path{fill:var(--t1)}
+.car.me circle{fill:var(--ink)}
+.car.ghost svg{opacity:.75}
+.car.ghost path,.car.ghost circle{fill:none;stroke:var(--muted);stroke-width:1.8;stroke-dasharray:3 2}
+.flag{position:absolute;right:0;top:0;bottom:2px;width:14px;border-radius:2px;background:conic-gradient(var(--ink) 25%, var(--surface) 0 50%, var(--ink) 0 75%, var(--surface) 0) 0 0 / 10px 10px}
+.wemoji{font-size:clamp(46px,22cqh,130px);line-height:1;transform:rotate(var(--r,0deg))}
+.tiles{--n:6;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 14px;max-width:100%}
+.grp{display:flex;gap:6px}
 .tile{
-  --tw:clamp(22px, min(calc((100cqw - 24px) / var(--n) - 6px), 15cqh), 62px);
+  --tw:clamp(22px, min(calc((100cqw - 24px) / var(--n) - 6px), 14cqh), 60px);
   width:var(--tw);height:calc(var(--tw) * 1.12);display:grid;place-items:center;
   border-radius:22%;background:var(--surface);border:2px solid var(--line);box-shadow:0 3px 0 var(--line);
   font:700 calc(var(--tw) * .6)/1 var(--letter);color:var(--ink);
   transition:transform .12s, background-color .12s;
 }
+.tile.sp{color:var(--muted);font-size:calc(var(--tw) * .42)}
 .tile.cur{border-color:var(--t4);box-shadow:0 5px 0 var(--t4);transform:translateY(-5px)}
 .tile.done{background:var(--ok);color:var(--on-toy);border-color:transparent;box-shadow:0 3px 0 color-mix(in srgb, var(--ok) 60%, #000)}
 
@@ -147,19 +171,89 @@ body.nofocus .focus-pill{display:inline-block}
   80%{transform:translateX(5px) rotate(var(--r,0deg))}
 }
 
+/* dynamite */
+.dyn{position:absolute;z-index:2;bottom:4px;width:clamp(56px,24cqh,112px);aspect-ratio:120/178;max-width:100%;pointer-events:none;transform-origin:50% 100%}
+.dyn svg{display:block;width:100%;height:100%;overflow:visible}
+.dyn .fuse{fill:none;stroke:var(--fuse);stroke-width:4;stroke-linecap:round}
+.dyn .label{font:800 9px var(--display);fill:var(--dyn-label);letter-spacing:.5px}
+.dyn.drop{animation:drop .75s cubic-bezier(.4,0,.6,1) both}
+.dyn.burn svg{animation:wob .16s ease-in-out infinite alternate;transform-origin:50% 100%}
+@keyframes drop{
+  0%{transform:translateY(-120cqh) rotate(-24deg)}
+  62%{transform:translateY(0) rotate(6deg)}
+  78%{transform:translateY(-10%) rotate(-3deg)}
+  100%{transform:translateY(0) rotate(0)}
+}
+@keyframes wob{from{transform:rotate(-1.6deg)}to{transform:rotate(1.6deg)}}
+.flash{position:absolute;inset:0;z-index:5;background:var(--flash);opacity:0;pointer-events:none}
+.flash.go{animation:flash .55s ease-out}
+@keyframes flash{0%{opacity:.85}100%{opacity:0}}
+.boom{position:absolute;left:50%;top:42%;z-index:6;pointer-events:none;white-space:nowrap;
+  font:800 clamp(48px,22cqmin,140px)/1 var(--display);color:var(--t2);
+  -webkit-text-stroke:3px var(--t1);paint-order:stroke fill;text-shadow:0 6px 0 var(--t1);
+  transform:translate(-50%,-50%)}
+.boom.go{animation:boom .9s ease-out forwards}
+@keyframes boom{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-8deg)}
+  15%{opacity:1;transform:translate(-50%,-50%) scale(1.15) rotate(-4deg)}
+  70%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-3deg)}
+  100%{opacity:0;transform:translate(-50%,-62%) scale(1.05) rotate(-3deg)}
+}
+.quake{animation:quake .5s}
+@keyframes quake{
+  0%,100%{transform:translate(0,0)}
+  10%{transform:translate(-8px,4px)} 20%{transform:translate(7px,-5px)} 30%{transform:translate(-6px,-3px)}
+  40%{transform:translate(5px,5px)} 55%{transform:translate(-4px,2px)} 70%{transform:translate(3px,-2px)} 85%{transform:translate(-2px,1px)}
+}
+
+/* toasts */
+.toasts{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:7;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;width:max-content;max-width:92%}
+.toast{display:flex;align-items:center;gap:10px;padding:8px 14px 8px 10px;border-radius:14px;background:var(--ink);color:var(--bg);font:700 15px/1.2 var(--display);box-shadow:0 8px 20px var(--shadow);animation:toastIn .3s cubic-bezier(.3,1.5,.5,1)}
+.toast .te{font-size:26px;line-height:1}
+.toast small{font:700 11px/1 var(--display);letter-spacing:.07em;text-transform:uppercase;opacity:.75}
+.toast.out{opacity:0;transform:translateY(-8px);transition:opacity .25s, transform .25s}
+@keyframes toastIn{from{opacity:0;transform:translateY(-14px) scale(.9)}to{opacity:1;transform:none}}
+
 /* overlay */
 .overlay{position:absolute;inset:0;z-index:3;display:grid;place-items:center;padding:12px;background:color-mix(in srgb, var(--bg) 72%, transparent);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
-.card{width:min(440px,100%);max-height:100%;overflow:auto;padding:22px 22px 18px;border-radius:22px;background:var(--surface);border:2px solid var(--line);box-shadow:0 14px 34px var(--shadow);text-align:center}
-.card .mascot{font-size:56px;line-height:1;margin-bottom:4px}
-.card h2{margin:0 0 6px;font:800 clamp(24px,4vw,32px)/1.1 var(--display);text-wrap:balance}
-.card p{margin:0 0 14px;font:500 17px/1.4 var(--display);color:var(--muted);text-wrap:pretty}
+#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
+.card{width:min(440px,100%);max-height:100%;overflow:auto;padding:20px 20px 16px;border-radius:22px;background:var(--surface);border:2px solid var(--line);box-shadow:0 14px 34px var(--shadow);text-align:center}
+.card.wide{width:min(600px,100%)}
+.card .mascot{font-size:52px;line-height:1;margin-bottom:4px}
+.card h2{margin:0 0 6px;font:800 clamp(22px,4vw,30px)/1.1 var(--display);text-wrap:balance}
+.card p{margin:0 0 12px;font:500 17px/1.4 var(--display);color:var(--muted);text-wrap:pretty}
 .card p strong{color:var(--ink)}
-.card .fine{margin:10px 0 0;font-size:14px}
-.res{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:4px 0 14px}
-.res .chip{min-width:90px}
+.card .fine{margin:8px 0 6px;font-size:14px}
+.res{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:4px 0 12px}
+.res .chip{min-width:88px}
 .acts{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
 .big{border:0;cursor:pointer;font:800 20px/1 var(--display);padding:14px 26px;border-radius:999px;background:var(--t3);color:var(--on-toy);box-shadow:0 4px 0 color-mix(in srgb, var(--t3) 58%, #000)}
 .big:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb, var(--t3) 58%, #000)}
+.big:disabled{opacity:.4;cursor:default;transform:none}
+.stars{display:flex;justify-content:center;gap:6px;font-size:42px;line-height:1;margin:2px 0 10px}
+.stars .on{color:var(--t2);text-shadow:0 3px 0 color-mix(in srgb, var(--t2) 55%, #000)}
+.stars .off{color:var(--line)}
+.lvl{display:flex;align-items:center;justify-content:center;gap:12px;margin:2px 0 10px}
+.lvl .arrow{width:44px;height:44px;border-radius:50%;border:2px solid var(--line);background:var(--surface-2);color:var(--ink);font:800 24px/1 var(--display);cursor:pointer}
+.lvl .arrow:disabled{opacity:.3;cursor:default}
+.lvl .info{display:flex;flex-direction:column;min-width:150px}
+.lvl strong{font:800 24px/1.1 var(--display)}
+.lvl .nm{font:700 15px/1.3 var(--display);color:var(--muted)}
+.lvl .mini{font-size:18px;letter-spacing:3px;color:var(--t2)}
+.namebox{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:5px;min-height:56px;margin:6px 0 2px}
+.nt{--c:var(--t4);--oc:var(--on-toy);width:clamp(30px,9vw,44px);height:clamp(34px,10vw,50px);border-radius:22%;display:grid;place-items:center;background:var(--c);color:var(--oc);font:700 clamp(18px,5.5vw,28px)/1 var(--letter);box-shadow:0 3px 0 color-mix(in srgb, var(--c) 60%, #000)}
+.nsp{width:12px}
+.caret{width:4px;height:40px;border-radius:2px;background:var(--ink);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.players{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.pchip{border:2px solid var(--line);background:var(--surface-2);color:var(--ink);font:700 15px/1 var(--display);padding:8px 12px;border-radius:999px;cursor:pointer}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:6px 0 14px;text-align:left}
+.badge{display:flex;flex-direction:column;gap:3px;padding:10px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line)}
+.badge .be{font-size:28px;line-height:1}
+.badge b{font:700 15px/1.2 var(--display)}
+.badge span{font:500 13px/1.3 var(--display);color:var(--muted)}
+.badge.locked .be{filter:grayscale(1);opacity:.35}
+.badge.got{background:color-mix(in srgb, var(--t2) 22%, var(--surface));border-color:color-mix(in srgb, var(--t2) 60%, var(--line))}
 
 /* keyboard */
 .kb{display:flex;flex-direction:column;gap:6px;padding-block:8px 12px;width:100%}
@@ -174,6 +268,9 @@ body.nofocus .focus-pill{display:inline-block}
   cursor:pointer;touch-action:manipulation;transition:transform .08s, box-shadow .08s;
 }
 .row.digits .key{font-family:var(--display);font-weight:800}
+.key.fn{width:auto;min-width:min(64px, calc((100% - 50px) / 11));padding-inline:12px;font:700 clamp(13px,2.1vh,18px)/1 var(--display);background:var(--surface-2)}
+.key.space{flex:1 1 0;width:auto;min-width:56px;max-width:320px}
+.key.ok{background:var(--t3);color:var(--on-toy);border-color:transparent;box-shadow:0 3px 0 color-mix(in srgb, var(--t3) 58%, #000)}
 .key.found{background:var(--c);color:var(--oc);border-color:transparent;box-shadow:0 3px 0 color-mix(in srgb, var(--c) 60%, #000)}
 .key.hint{background:var(--t2);color:var(--on-yellow);border-color:transparent;animation:glow 1s ease-in-out infinite}
 .key.down{transform:translateY(3px);box-shadow:0 0 0 var(--line)}
@@ -182,25 +279,34 @@ body.nofocus .focus-pill{display:inline-block}
   50%{box-shadow:0 3px 0 color-mix(in srgb, var(--t2) 60%, #000), 0 0 0 7px color-mix(in srgb, var(--t2) 45%, transparent)}
 }
 
-@media (max-width:780px){
-  .bar{grid-template-columns:1fr auto}
-  .modes{grid-column:1 / -1;grid-row:2;justify-self:stretch}
-  .modes button{flex:1 1 0;padding:9px 6px;font-size:14px}
+@media (min-width:1180px){
+  .bar{grid-template-columns:auto 1fr auto}
+  .modes{grid-column:2;grid-row:1}
+  .tools{grid-column:3;grid-row:1}
+}
+@media (max-width:640px){
+  .modes{justify-self:stretch}
+  .modes button{flex:1 1 0;padding:9px 4px;font-size:14px}
+  .modes .f{display:none}
+  .modes .s{display:inline}
 }
 @media (max-width:560px){
-  .tool .lbl{display:none}
+  .brand h1{display:none}
+  #btnFull{display:none}
   .tool{padding:7px 9px}
-  .brand .logo{font-size:24px}
-  .chip{min-width:64px;padding:3px 9px}
+  .tool .nm{max-width:72px}
+  #btnPlayer svg{display:none}
+  .chip{min-width:62px;padding:3px 9px}
   .chip .v{font-size:19px}
-  .chip.wide{min-width:120px}
+  .chip.wide{min-width:112px}
   .row{gap:4px}
   .key{width:min(64px, calc((100% - 40px) / 11));border-radius:8px}
 }
 @media (prefers-reduced-motion: reduce){
-  .pop,.shake{animation:none}
+  .pop,.shake,.dyn.drop,.dyn.burn svg,.quake,.boom.go,.caret{animation:none}
+  .boom.go{opacity:1}
   .key.hint{animation:none;box-shadow:0 0 0 4px color-mix(in srgb, var(--t2) 55%, transparent)}
-  .tile,.key,.meter i{transition:none}
+  .tile,.key,.meter i,.car{transition:none}
 }
 </style>
 </head>
@@ -210,20 +316,26 @@ body.nofocus .focus-pill{display:inline-block}
   <header class="bar">
     <div class="brand"><span class="logo" aria-hidden="true">🐓</span><h1>Näppäin<span>aapinen</span></h1></div>
     <nav class="modes" role="tablist" aria-label="Pelitila">
-      <button type="button" role="tab" data-mode="free" aria-selected="true">Vapaa leikki</button>
-      <button type="button" role="tab" data-mode="find" aria-selected="false">Etsi kirjain</button>
-      <button type="button" role="tab" data-mode="words" aria-selected="false">Kirjoita sana</button>
+      <button type="button" role="tab" data-mode="free" aria-selected="true"><span class="f">Vapaa leikki</span><span class="s">Vapaa</span></button>
+      <button type="button" role="tab" data-mode="find" aria-selected="false"><span class="f">Etsi kirjain</span><span class="s">Etsi</span></button>
+      <button type="button" role="tab" data-mode="words" aria-selected="false"><span class="f">Kirjoita sana</span><span class="s">Sanat</span></button>
+      <button type="button" role="tab" data-mode="snow" aria-selected="false"><span class="f">Lumisade</span><span class="s">Lumisade</span></button>
     </nav>
     <div class="tools">
-      <button type="button" class="tool" id="btnCase" aria-label="Isot tai pienet kirjaimet"><span class="case" id="caseLbl">ABC</span></button>
-      <button type="button" class="tool" id="btnSound" aria-pressed="true" aria-label="Äänet">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg><span class="lbl">Ääni</span>
+      <button type="button" class="tool" id="btnPlayer" title="Vaihda pelaajaa">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span class="nm" id="playerName">Pelaaja</span>
       </button>
-      <button type="button" class="tool" id="btnSpeech" aria-pressed="false" aria-label="Puhe" hidden>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H10l-5 4v-4H4z"/><path d="M8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01"/></svg><span class="lbl">Puhe</span>
+      <button type="button" class="tool" id="btnBadges" title="Merkit" aria-label="Merkit">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="15" r="5"/><path d="M8.6 11.2 6 3h4l2 5 2-5h4l-2.6 8.2"/></svg><span class="cnt" id="badgeCount">0</span>
       </button>
-      <button type="button" class="tool" id="btnFull" aria-label="Koko näyttö">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span class="lbl">Koko näyttö</span>
+      <button type="button" class="tool icon" id="btnSound" aria-pressed="true" aria-label="Äänet" title="Äänet">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>
+      </button>
+      <button type="button" class="tool icon" id="btnSpeech" aria-pressed="false" aria-label="Puhe" title="Puhe" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H10l-5 4v-4H4z"/><path d="M8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01"/></svg>
+      </button>
+      <button type="button" class="tool icon" id="btnFull" aria-label="Koko näyttö" title="Koko näyttö">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
       </button>
     </div>
   </header>
@@ -231,7 +343,7 @@ body.nofocus .focus-pill{display:inline-block}
   <section class="stats" id="stats" aria-label="Laskuri"></section>
 
   <main class="stage" id="stage">
-    <canvas id="fx" aria-hidden="true"></canvas>
+    <canvas id="snow" aria-hidden="true" hidden></canvas>
     <div class="center">
       <p class="prompt" id="prompt">Paina mitä tahansa kirjainta tai numeroa</p>
       <span class="focus-pill">Napsauta ruutua, niin näppäimet toimivat</span>
@@ -240,11 +352,36 @@ body.nofocus .focus-pill{display:inline-block}
         <div class="word" id="word"><span class="em">🚗</span><span class="w"><b>A</b>UTO</span></div>
       </div>
       <div class="wv" id="wordView" hidden>
+        <div class="race-cap" id="raceCap">Tavoite: 30 kirjainta</div>
+        <div class="race" id="race" aria-hidden="true">
+          <div class="lane" id="laneGhost"><span class="car ghost" id="carGhost"><svg viewBox="0 0 40 22"><path d="M3 16 5 10q1-3 4-3h5l5-5h9q3 0 4 3l2 4q4 1 4 4v3z"/><circle cx="11" cy="17" r="4"/><circle cx="30" cy="17" r="4"/></svg></span></div>
+          <div class="lane"><span class="car me" id="carMe"><svg viewBox="0 0 40 22"><path d="M3 16 5 10q1-3 4-3h5l5-5h9q3 0 4 3l2 4q4 1 4 4v3z"/><circle cx="11" cy="17" r="4"/><circle cx="30" cy="17" r="4"/></svg></span></div>
+          <span class="flag"></span>
+        </div>
         <div class="wemoji" id="wEmoji">🐱</div>
         <div class="tiles" id="tiles"></div>
       </div>
     </div>
+    <div class="dyn" id="dyn" hidden>
+      <svg viewBox="0 -8 120 178" aria-hidden="true" id="dynSvg">
+        <rect x="20" y="58" width="28" height="106" rx="7" fill="var(--dyn-a)"/>
+        <rect x="72" y="58" width="28" height="106" rx="7" fill="var(--dyn-a)"/>
+        <rect x="46" y="52" width="28" height="112" rx="7" fill="var(--dyn-b)"/>
+        <rect x="25" y="64" width="5" height="92" rx="2.5" fill="rgba(255,255,255,.25)"/>
+        <rect x="51" y="58" width="5" height="98" rx="2.5" fill="rgba(255,255,255,.25)"/>
+        <rect x="77" y="64" width="5" height="92" rx="2.5" fill="rgba(255,255,255,.25)"/>
+        <rect x="16" y="100" width="88" height="18" rx="3" fill="var(--dyn-band)"/>
+        <text x="60" y="112.5" text-anchor="middle" class="label">DYNAMIITTI</text>
+        <path id="fuse" class="fuse" d="M60 54 C 60 38, 86 40, 84 24 C 82 10, 62 12, 54 4"/>
+        <circle id="sparkO" cx="54" cy="4" r="8" fill="var(--spark-glow)" opacity=".55"/>
+        <circle id="sparkI" cx="54" cy="4" r="3.6" fill="var(--spark)"/>
+      </svg>
+    </div>
     <div class="overlay" id="overlay" hidden><div class="card" id="card" role="dialog" aria-live="polite"></div></div>
+    <canvas id="fx" aria-hidden="true"></canvas>
+    <div class="flash" id="flash"></div>
+    <div class="boom" id="boom" hidden></div>
+    <div class="toasts" id="toasts" aria-live="polite"></div>
   </main>
 
   <div class="kb" id="kb" aria-label="Näppäimistö"></div>
@@ -257,6 +394,11 @@ body.nofocus .focus-pill{display:inline-block}
   const $ = (s) => document.querySelector(s);
   const root = document.documentElement;
   const reduced = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const up = (s) => s.toLocaleUpperCase('fi');
+  const low = (s) => s.toLocaleLowerCase('fi');
+  const rand = (a) => a[Math.floor(Math.random() * a.length)];
+  const isDigit = (c) => /^[0-9]$/.test(c);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   /* ---------- sisältö ---------- */
   const ALPHA = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ'];
@@ -294,36 +436,57 @@ body.nofocus .focus-pill{display:inline-block}
   };
   const NUMS = ['nolla', 'yksi', 'kaksi', 'kolme', 'neljä', 'viisi', 'kuusi', 'seitsemän', 'kahdeksan', 'yhdeksän'];
   const COUNT = ['🍎', '🍓', '⭐', '🎈', '🐞', '🌸', '🚗', '🧸', '🐟', '🍪'];
-  const WORDS = [
-    ['kissa', '🐱'], ['koira', '🐶'], ['auto', '🚗'], ['omena', '🍎'], ['pallo', '⚽'], ['kuu', '🌙'],
-    ['aurinko', '☀️'], ['lumi', '❄️'], ['kala', '🐟'], ['hevonen', '🐴'], ['poro', '🦌'], ['joulu', '🎄'],
-    ['lahja', '🎁'], ['kirja', '📖'], ['kynä', '✏️'], ['koulu', '🏫'], ['talo', '🏠'], ['puu', '🌳'],
-    ['kukka', '🌸'], ['sieni', '🍄'], ['mansikka', '🍓'], ['banaani', '🍌'], ['jäätelö', '🍦'], ['pizza', '🍕'],
-    ['leipä', '🍞'], ['maito', '🥛'], ['juusto', '🧀'], ['juna', '🚆'], ['laiva', '🚢'], ['pyörä', '🚲'],
-    ['traktori', '🚜'], ['raketti', '🚀'], ['tähti', '⭐'], ['sateenkaari', '🌈'], ['pilvi', '☁️'], ['karhu', '🐻'],
-    ['kettu', '🦊'], ['pöllö', '🦉'], ['jänis', '🐰'], ['orava', '🐿️'], ['siili', '🦔'], ['pingviini', '🐧'],
-    ['lumiukko', '☃️'], ['sukset', '🎿'], ['kitara', '🎸'], ['rumpu', '🥁'], ['saapas', '👢'], ['sakset', '✂️'],
-    ['kello', '⏰'], ['avain', '🔑'], ['lamppu', '💡'], ['sydän', '❤️'], ['kakku', '🎂'], ['sauna', '🧖'],
-    ['mehiläinen', '🐝'], ['sammakko', '🐸'], ['tiikeri', '🐯'], ['vene', '⛵'], ['valas', '🐋'], ['kuusi', '🌲'],
-    ['reppu', '🎒'], ['hanskat', '🧤']
+  const LEVELS = [
+    { name: 'Lyhyet sanat', desc: 'Lyhyitä sanoja ilman ääkkösiä', words: [['kala', '🐟'], ['talo', '🏠'], ['auto', '🚗'], ['juna', '🚆'], ['lumi', '❄️'], ['poro', '🦌'], ['vene', '⛵'], ['ovi', '🚪'], ['sade', '🌧️'], ['sika', '🐷'], ['kana', '🐔'], ['maito', '🥛'], ['kirja', '📖'], ['pilvi', '☁️'], ['sieni', '🍄'], ['susi', '🐺'], ['hai', '🦈'], ['rapu', '🦀'], ['koira', '🐶'], ['karhu', '🐻'], ['tuli', '🔥'], ['muna', '🥚'], ['rumpu', '🥁'], ['omena', '🍎'], ['mopo', '🛵'], ['nuoli', '🏹'], ['koulu', '🏫'], ['apina', '🐒'], ['etana', '🐌'], ['orava', '🐿️'], ['leijona', '🦁'], ['hevonen', '🐴']] },
+    { name: 'Ä ja Ö', desc: 'Sanoja, joissa on ä tai ö', words: [['kynä', '✏️'], ['leipä', '🍞'], ['pyörä', '🚲'], ['tähti', '⭐'], ['sydän', '❤️'], ['jänis', '🐰'], ['käsi', '✋'], ['nenä', '👃'], ['kenkä', '👟'], ['sänky', '🛏️'], ['äiti', '👩'], ['isä', '👨'], ['ämpäri', '🪣'], ['lehmä', '🐄'], ['mäyrä', '🦡'], ['kärry', '🛒'], ['päärynä', '🍐'], ['sähkö', '⚡'], ['jää', '🧊'], ['jäätelö', '🍦'], ['tyttö', '👧'], ['pöllö', '🦉'], ['ötökkä', '🐞']] },
+    { name: 'Tuplakirjaimet', desc: 'Sanoja, joissa sama kirjain tulee kahdesti peräkkäin', words: [['kissa', '🐱'], ['pallo', '⚽'], ['kakku', '🎂'], ['mansikka', '🍓'], ['sammakko', '🐸'], ['kettu', '🦊'], ['lamppu', '💡'], ['reppu', '🎒'], ['kello', '⏰'], ['tikkari', '🍭'], ['hattu', '🎩'], ['juusto', '🧀'], ['siili', '🦔'], ['pingviini', '🐧'], ['banaani', '🍌'], ['maapallo', '🌍'], ['saappaat', '👢'], ['tomaatti', '🍅'], ['porkkana', '🥕'], ['kukka', '🌸'], ['lammas', '🐑'], ['kuusi', '🌲'], ['nalle', '🧸'], ['puu', '🌳'], ['kuu', '🌙'], ['hiiri', '🐭'], ['ruusu', '🌹'], ['sukka', '🧦'], ['lusikka', '🥄'], ['tuuli', '🌬️']] },
+    { name: 'Pitkät sanat', desc: 'Pitkiä sanoja ja yhdyssanoja', words: [['lentokone', '✈️'], ['sateenkaari', '🌈'], ['lumiukko', '☃️'], ['mehiläinen', '🐝'], ['perhonen', '🦋'], ['krokotiili', '🐊'], ['kirahvi', '🦒'], ['dinosaurus', '🦕'], ['helikopteri', '🚁'], ['ambulanssi', '🚑'], ['hämähäkki', '🕷️'], ['kilpikonna', '🐢'], ['vesimeloni', '🍉'], ['ilmapallo', '🎈'], ['polkupyörä', '🚲'], ['jalkapallo', '⚽'], ['joulukuusi', '🎄'], ['paloauto', '🚒'], ['poliisiauto', '🚓'], ['lumihiutale', '❄️'], ['muurahainen', '🐜'], ['mustekala', '🐙'], ['sarvikuono', '🦏'], ['virtahepo', '🦛'], ['joulupukki', '🎅'], ['kaukoputki', '🔭'], ['aurinkolasit', '🕶️']] },
+    { name: 'Kaksi sanaa', desc: 'Lyhyitä lauseita, välilyönti mukaan', words: [['iso koira', '🐕'], ['pieni kissa', '🐈'], ['punainen auto', '🚗'], ['lumi sataa', '🌨️'], ['aurinko paistaa', '☀️'], ['joulupukki tulee', '🎅'], ['poro juoksee', '🦌'], ['kala ui', '🐟'], ['lintu laulaa', '🐦'], ['hyvää yötä', '🌙'], ['vauva nukkuu', '👶'], ['juna tulee', '🚆'], ['sammakko hyppää', '🐸'], ['karhu nukkuu', '🐻'], ['kukka kasvaa', '🌱'], ['raketti lentää', '🚀'], ['pöllö huhuilee', '🦉'], ['lumiukko sulaa', '☃️']] }
   ];
   const ROUND_MS = 60000;
+  const GOAL = 30;                 // tavoite ensimmäisellä kierroksella
+  const MIN_WORDS_FOR_LEVEL = 5;   // näin monta sanaa kierroksella, niin seuraava taso aukeaa
+  const DYN = { find: 10, words: 50, snow: 25 };  // putki, josta dynamiitti putoaa
+  const HEARTS = 5;
+  const BADGES = [
+    { id: 'name', em: '👋', name: 'Hei vaan!', desc: 'Kirjoita oma nimesi.' },
+    { id: 'first-word', em: '✏️', name: 'Ensimmäinen sana', desc: 'Kirjoita sana loppuun asti.' },
+    { id: 'streak10', em: '🔥', name: 'Kuuma putki', desc: '10 oikein peräkkäin.' },
+    { id: 'dynamite', em: '🧨', name: 'Räjäyttäjä', desc: 'Sytytä dynamiitti pitkällä putkella.' },
+    { id: 'ghost', em: '🏁', name: 'Ohitus', desc: 'Aja oman ennätyksesi ohi.' },
+    { id: 'perfect', em: '🎯', name: 'Tarkka-ampuja', desc: 'Sanakierros ilman virheitä, vähintään 15 kirjainta.' },
+    { id: 'stars3', em: '⭐', name: 'Kolme tähteä', desc: 'Saa sanakierroksesta kolme tähteä.' },
+    { id: 'umlaut', em: '🪣', name: 'Ääkkösmestari', desc: 'Kirjoita 10 sanaa, joissa on ä tai ö.' },
+    { id: 'level5', em: '🏆', name: 'Lausemestari', desc: 'Avaa sanojen taso 5.' },
+    { id: 'aakkoset', em: '🐓', name: 'Koko aapinen', desc: 'Löydä kaikki 29 kirjainta vapaassa leikissä.' },
+    { id: 'snow50', em: '❄️', name: 'Lumiaura', desc: 'Sulata 50 hiutaletta yhdellä lumisateella.' }
+  ];
 
   /* ---------- tallennus (vain tällä laitteella) ---------- */
   const store = {
     get(k, d) { try { const v = localStorage.getItem('naa.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem('naa.' + k, JSON.stringify(v)); } catch (e) {} }
   };
+  const pKey = (name) => 'p:' + low(name);
+  const newPlayer = (name) => ({ name, badges: [], level: 1, best: {}, stars: {}, findBest: 0, snowBest: 0, umlaut: 0 });
+  function loadPlayer(name) { return Object.assign(newPlayer(name), store.get(pKey(name), null) || {}, { name }); }
+  function savePlayer() { if (S.p) store.set(pKey(S.p.name), S.p); }
+  function rememberPlayer(name) {
+    const list = store.get('players', []).filter((n) => low(n) !== low(name));
+    list.unshift(name); store.set('players', list.slice(0, 8));
+  }
+  function capWords(s) { let o = ''; for (let i = 0; i < s.length; i++) o += (i === 0 || s[i - 1] === ' ' || s[i - 1] === '-') ? up(s[i]) : low(s[i]); return o; }
+  const formatName = (buf) => capWords(buf.trim().replace(/\s+/g, ' ').replace(/^-+|-+$/g, ''));
 
   const S = {
     mode: 'free',
-    upper: store.get('upper', true),
-    sound: store.get('sound', true),
-    speech: store.get('speech', false),
+    upper: store.get('upper', true), sound: store.get('sound', true), speech: store.get('speech', false),
+    p: null, naming: false, nameBuf: '',
     found: new Set(), presses: 0, rot: {}, view: null, freeView: null,
-    f: { target: null, hits: 0, streak: 0, best: store.get('bestStreak', 0), misses: 0, locked: false, hintT: 0, em: '✨' },
-    w: { running: false, endAt: 0, list: [], cur: null, pos: 0, words: 0, letters: 0, wrong: 0, wait: false, timer: 0, best: store.get('bestRound', null) },
-    overlayLock: 0
+    f: { target: null, hits: 0, streak: 0, misses: 0, locked: false, hintT: 0, em: '✨' },
+    w: { running: false, startAt: 0, endAt: 0, list: [], cur: null, pos: 0, words: 0, letters: 0, wrong: 0, streak: 0, wait: false, timer: 0, level: 1, passed: false, tileEls: [] },
+    s: { running: false, flakes: [], hearts: HEARTS, hits: 0, misses: 0, streak: 0, top: 0, next: 0, last: 0, raf: 0, hintCh: null },
+    overlayLock: 0, overlayKind: null
   };
 
   /* ---------- elementit ---------- */
@@ -331,23 +494,23 @@ body.nofocus .focus-pill{display:inline-block}
   const wordEl = $('#word'), prompt = $('#prompt'), stats = $('#stats'), kb = $('#kb');
   const overlay = $('#overlay'), card = $('#card'), live = $('#live');
   const wordView = $('#wordView'), wEmoji = $('#wEmoji'), tiles = $('#tiles');
-  const btnCase = $('#btnCase'), caseLbl = $('#caseLbl'), btnSound = $('#btnSound'), btnSpeech = $('#btnSpeech'), btnFull = $('#btnFull');
+  const raceCap = $('#raceCap'), laneGhost = $('#laneGhost'), carMe = $('#carMe'), carGhost = $('#carGhost');
+  const dyn = $('#dyn'), dynSvg = $('#dynSvg'), fusePath = $('#fuse'), sparkO = $('#sparkO'), sparkI = $('#sparkI');
+  const flashEl = $('#flash'), boomEl = $('#boom'), toasts = $('#toasts'), snowCv = $('#snow');
+  const btnPlayer = $('#btnPlayer'), playerName = $('#playerName'), btnBadges = $('#btnBadges'), badgeCount = $('#badgeCount');
+  const btnSound = $('#btnSound'), btnSpeech = $('#btnSpeech'), btnFull = $('#btnFull');
   const tabs = [...document.querySelectorAll('.modes button')];
 
-  const up = (s) => s.toLocaleUpperCase('fi');
-  const low = (s) => s.toLocaleLowerCase('fi');
   const cased = (s) => S.upper ? up(s) : low(s);
-  const rand = (a) => a[Math.floor(Math.random() * a.length)];
-  const isDigit = (c) => /^[0-9]$/.test(c);
-  function colorIdx(ch) { const i = ALPHA.indexOf(ch); return ((i >= 0 ? i : Number(ch)) % 6) + 1; }
+  function colorIdx(ch) { const i = ALPHA.indexOf(up(ch)); return ((i >= 0 ? i : (isDigit(ch) ? Number(ch) : 3)) % 6) + 1; }
   function paint(el, ch) {
     const n = colorIdx(ch);
     el.style.setProperty('--c', `var(--t${n})`);
     el.style.setProperty('--oc', n === 2 ? 'var(--on-yellow)' : 'var(--on-toy)');
   }
 
-  /* ---------- äänet (yksi jaettu AudioContext) ---------- */
-  let ac = null, master = null;
+  /* ---------- äänet ---------- */
+  let ac = null, master = null, noiseBuf = null, hiss = null;
   function audio() {
     if (!S.sound) return null;
     try {
@@ -372,53 +535,74 @@ body.nofocus .focus-pill{display:inline-block}
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     osc.connect(g); g.connect(master); osc.start(t); osc.stop(t + dur + 0.03);
   }
+  function noise(a) {
+    if (!noiseBuf) {
+      const len = a.sampleRate * 2; noiseBuf = a.createBuffer(1, len, a.sampleRate);
+      const d = noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    }
+    return noiseBuf;
+  }
+  function boomSound() {
+    const a = audio(); if (!a) return;
+    const t = a.currentTime, src = a.createBufferSource(), lp = a.createBiquadFilter(), g = a.createGain();
+    src.buffer = noise(a); lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(2200, t); lp.frequency.exponentialRampToValueAtTime(70, t + 1.3);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(1, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.5);
+    src.connect(lp); lp.connect(g); g.connect(master); src.start(t); src.stop(t + 1.6);
+    tone(95, 0, 0.9, { type: 'sine', vol: 0.7, to: 28 });
+  }
+  function hissStart() {
+    const a = audio(); if (!a) return;
+    const src = a.createBufferSource(), bp = a.createBiquadFilter(), g = a.createGain();
+    src.buffer = noise(a); src.loop = true; bp.type = 'bandpass'; bp.frequency.value = 5200; bp.Q.value = 0.9;
+    g.gain.value = 0.0001; g.gain.setTargetAtTime(0.06, a.currentTime, 0.05);
+    src.connect(bp); bp.connect(g); g.connect(master); src.start(); hiss = { src, g };
+  }
+  function hissFlicker() { if (hiss && ac) hiss.g.gain.setTargetAtTime(0.03 + Math.random() * 0.06, ac.currentTime, 0.015); }
+  function hissStop() {
+    if (!hiss || !ac) { hiss = null; return; }
+    try { const t = ac.currentTime; hiss.g.gain.setTargetAtTime(0.0001, t, 0.02); hiss.src.stop(t + 0.15); } catch (e) {}
+    hiss = null;
+  }
   const PENTA = [0, 2, 4, 7, 9];
   const noteOf = (i) => 261.63 * Math.pow(2, (PENTA[i % 5] + 12 * (Math.floor(i / 5) % 3)) / 12);
   const sfx = {
-    letter(ch) { const f = noteOf(Math.max(0, ALPHA.indexOf(ch))); tone(f, 0, 0.22, { vol: 0.26 }); tone(f * 2, 0, 0.09, { type: 'sine', vol: 0.07 }); },
+    letter(ch) { const f = noteOf(Math.max(0, ALPHA.indexOf(up(ch)))); tone(f, 0, 0.22, { vol: 0.26 }); tone(f * 2, 0, 0.09, { type: 'sine', vol: 0.07 }); },
     digit(d) { const f = noteOf(Number(d) + 3); tone(f, 0, 0.2, { type: 'square', vol: 0.06 }); tone(f, 0, 0.24, { vol: 0.2 }); },
     good() { tone(659, 0, 0.12, { vol: 0.22 }); tone(988, 0.08, 0.22, { vol: 0.22 }); },
     bad() { tone(220, 0, 0.22, { type: 'sine', vol: 0.2, to: 150 }); },
+    heart() { tone(330, 0, 0.3, { type: 'sine', vol: 0.22, to: 160 }); },
     word() { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.07, 0.22, { vol: 0.2 })); },
+    badge() { [784, 988, 1319].forEach((f, i) => tone(f, 0.1 + i * 0.08, 0.26, { type: 'sine', vol: 0.16 })); },
+    whistle() { tone(1500, 0, 0.7, { type: 'sine', vol: 0.07, to: 420 }); },
     fanfare() { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i * 0.11, i === 5 ? 0.55 : 0.18, { vol: 0.22 })); }
   };
 
-  /* ---------- puhe (vain jos laitteessa on suomenkielinen ääni) ---------- */
+  /* ---------- puhe ---------- */
   const synth = window.speechSynthesis || null;
   let fiVoice = null;
   function findVoice() {
     try { fiVoice = synth ? (synth.getVoices().find((v) => /^fi/i.test(v.lang)) || null) : null; } catch (e) { fiVoice = null; }
     btnSpeech.hidden = !fiVoice;
   }
-  if (synth) {
-    findVoice();
-    try { synth.addEventListener('voiceschanged', findVoice); } catch (e) { synth.onvoiceschanged = findVoice; }
-  }
+  if (synth) { findVoice(); try { synth.addEventListener('voiceschanged', findVoice); } catch (e) { synth.onvoiceschanged = findVoice; } }
   function say(text) {
     if (!S.speech || !fiVoice) return;
-    try {
-      synth.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.voice = fiVoice; u.lang = fiVoice.lang; u.rate = 0.9; u.pitch = 1.1;
-      synth.speak(u);
-    } catch (e) {}
+    try { synth.cancel(); const u = new SpeechSynthesisUtterance(text); u.voice = fiVoice; u.lang = fiVoice.lang; u.rate = 0.9; u.pitch = 1.1; synth.speak(u); } catch (e) {}
   }
 
   /* ---------- hiukkaset ---------- */
-  const cv = $('#fx'), cx = cv.getContext('2d');
+  const cv = $('#fx'), cx = cv.getContext('2d'), sx = snowCv.getContext('2d');
   let W = 0, H = 0, parts = [], raf = 0, last = 0;
+  function sizeCanvas(c, ctx, dpr) { c.width = Math.max(1, Math.round(W * dpr)); c.height = Math.max(1, Math.round(H * dpr)); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
   function resize() {
     const r = stage.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
-    W = r.width; H = r.height;
-    cv.width = Math.max(1, Math.round(W * dpr)); cv.height = Math.max(1, Math.round(H * dpr));
-    cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    W = r.width; H = r.height; sizeCanvas(cv, cx, dpr); sizeCanvas(snowCv, sx, dpr);
+    if (S.mode === 'snow' && !S.s.running) drawSnow(previewFlakes());
+    if (S.mode === 'words') updateRace();
   }
-  if (window.ResizeObserver) new ResizeObserver(resize).observe(stage); else window.addEventListener('resize', resize);
-  resize();
-  function palette() {
-    const cs = getComputedStyle(root);
-    return ['--t1', '--t2', '--t3', '--t4', '--t5', '--t6'].map((v) => cs.getPropertyValue(v).trim() || '#888');
-  }
+  function palette() { const cs = getComputedStyle(root); return [1, 2, 3, 4, 5, 6].map((n) => cs.getPropertyValue('--t' + n).trim() || '#888'); }
+  function kick() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); } }
   function burst(x, y, o = {}) {
     const { count = 40, emoji = null, power = 1 } = o;
     const pal = palette(), n = reduced ? Math.round(count / 3) : count;
@@ -428,13 +612,14 @@ body.nofocus .focus-pill{display:inline-block}
         rot: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4, life: 0, max: 45 + Math.random() * 50, color: pal[i % pal.length], shape: i % 3 });
     }
     if (emoji && !reduced) {
-      for (let j = 0; j < 3; j++) {
-        parts.push({ x, y, vx: (Math.random() - 0.5) * 11, vy: -6 - Math.random() * 6, g: 0.24, size: 30 + Math.random() * 26,
-          rot: 0, vr: (Math.random() - 0.5) * 0.12, life: 0, max: 85, emoji });
-      }
+      for (let j = 0; j < 3; j++) parts.push({ x, y, vx: (Math.random() - 0.5) * 11 * power, vy: -6 - Math.random() * 6, g: 0.24, size: 30 + Math.random() * 26, rot: 0, vr: (Math.random() - 0.5) * 0.12, life: 0, max: 85, emoji });
     }
-    if (parts.length > 600) parts.splice(0, parts.length - 600);
-    if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
+    if (parts.length > 700) parts.splice(0, parts.length - 700);
+    kick();
+  }
+  function sparkle(x, y) {
+    for (let i = 0; i < 2; i++) parts.push({ x, y, vx: (Math.random() - 0.5) * 3, vy: -1 - Math.random() * 2.5, g: 0.12, size: 2 + Math.random() * 3, rot: 0, vr: 0, life: 0, max: 14 + Math.random() * 10, color: Math.random() < 0.5 ? '#FFE066' : '#FF8A1F', shape: 0 });
+    kick();
   }
   function step(now) {
     const dt = Math.min(3, (now - last) / 16.67); last = now;
@@ -452,7 +637,7 @@ body.nofocus .focus-pill{display:inline-block}
       } else {
         cx.fillStyle = p.color; const s = p.size;
         if (p.shape === 0) { cx.beginPath(); cx.arc(0, 0, s / 2, 0, Math.PI * 2); cx.fill(); }
-        else if (p.shape === 1) { cx.fillRect(-s / 2, -s / 2, s, s); }
+        else if (p.shape === 1) cx.fillRect(-s / 2, -s / 2, s, s);
         else { cx.beginPath(); cx.moveTo(0, -s / 2); cx.lineTo(s / 2, s / 2); cx.lineTo(-s / 2, s / 2); cx.closePath(); cx.fill(); }
       }
       cx.restore();
@@ -460,19 +645,95 @@ body.nofocus .focus-pill{display:inline-block}
     cx.globalAlpha = 1;
     if (parts.length) raf = requestAnimationFrame(step); else { raf = 0; cx.clearRect(0, 0, W, H); }
   }
-  function centerOf(el) {
-    const s = stage.getBoundingClientRect(), r = el.getBoundingClientRect();
-    return { x: r.left - s.left + r.width / 2, y: r.top - s.top + r.height / 2 };
+  function centerOf(el) { const s = stage.getBoundingClientRect(), r = el.getBoundingClientRect(); return { x: r.left - s.left + r.width / 2, y: r.top - s.top + r.height / 2 }; }
+  function restart(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+  function pop(el) { if (!el) return; el.classList.remove('shake'); el.style.setProperty('--r', (Math.random() * 10 - 5).toFixed(1) + 'deg'); restart(el, 'pop'); }
+  function shake(el) { if (!el || reduced) return; el.classList.remove('pop'); restart(el, 'shake'); }
+
+  /* ---------- ilmoitukset ja merkit ---------- */
+  function toast(html) {
+    const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = html;
+    toasts.appendChild(t);
+    while (toasts.children.length > 3) toasts.firstChild.remove();
+    setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, 2600);
   }
-  function pop(el) {
-    if (!el) return;
-    el.classList.remove('pop', 'shake'); void el.offsetWidth;
-    el.style.setProperty('--r', (Math.random() * 10 - 5).toFixed(1) + 'deg');
-    el.classList.add('pop');
+  function award(id) {
+    const p = S.p; if (!p || p.badges.includes(id)) return;
+    const b = BADGES.find((x) => x.id === id); if (!b) return;
+    p.badges.push(id); savePlayer(); syncPlayer(); sfx.badge();
+    toast(`<span class="te">${b.em}</span><span><small>Uusi merkki</small><br>${b.name}</span>`);
   }
-  function shake(el) {
-    if (!el || reduced) return;
-    el.classList.remove('pop', 'shake'); void el.offsetWidth; el.classList.add('shake');
+  function syncPlayer() {
+    playerName.textContent = S.p ? S.p.name : 'Pelaaja';
+    badgeCount.textContent = S.p ? `${S.p.badges.length}/${BADGES.length}` : `0/${BADGES.length}`;
+    btnBadges.setAttribute('aria-label', `Merkit, ${S.p ? S.p.badges.length : 0} / ${BADGES.length}`);
+  }
+
+  /* ---------- dynamiitti ---------- */
+  const D = { active: false, raf: 0, t0: 0, dur: 3200, L: 0, timer: 0 };
+  function placeSpark(len) {
+    const p = fusePath.getPointAtLength(Math.max(0, len));
+    sparkO.setAttribute('cx', p.x); sparkO.setAttribute('cy', p.y); sparkI.setAttribute('cx', p.x); sparkI.setAttribute('cy', p.y);
+    return p;
+  }
+  function dynamite() {
+    if (D.active) return;
+    D.active = true;
+    const right = Math.random() < 0.5;
+    dyn.style.left = right ? 'auto' : '5%'; dyn.style.right = right ? '5%' : 'auto';
+    dyn.hidden = false;
+    D.L = fusePath.getTotalLength();
+    fusePath.style.strokeDasharray = `${D.L} ${D.L}`; fusePath.style.strokeDashoffset = '0';
+    sparkO.style.display = 'none'; sparkI.style.display = 'none';
+    placeSpark(D.L);
+    dyn.classList.remove('burn'); restart(dyn, 'drop');
+    sfx.whistle();
+    toast('<span class="te">🧨</span><span><small>Huippuputki</small><br>Dynamiitti putoaa!</span>');
+    clearTimeout(D.timer);
+    D.timer = setTimeout(burnStart, reduced ? 50 : 760);
+  }
+  function burnStart() {
+    if (!D.active) return;
+    sparkO.style.display = ''; sparkI.style.display = '';
+    dyn.classList.add('burn'); hissStart();
+    D.t0 = performance.now(); D.raf = requestAnimationFrame(burnStep);
+  }
+  function burnStep(now) {
+    if (!D.active) return;
+    const k = Math.min(1, (now - D.t0) / D.dur), off = D.L * k;
+    fusePath.style.strokeDashoffset = off;
+    const p = placeSpark(D.L - off), fl = 0.75 + Math.random() * 0.5;
+    sparkO.setAttribute('r', (8 * fl).toFixed(1)); sparkI.setAttribute('r', (3.6 * fl).toFixed(1));
+    hissFlicker();
+    if (!reduced) {
+      const m = dynSvg.getScreenCTM();
+      if (m) { const s = stage.getBoundingClientRect(); sparkle(m.a * p.x + m.c * p.y + m.e - s.left, m.b * p.x + m.d * p.y + m.f - s.top); }
+    }
+    if (k < 1) D.raf = requestAnimationFrame(burnStep); else explode();
+  }
+  function explode() {
+    hissStop();
+    const c = centerOf(dyn);
+    dyn.hidden = true; dyn.classList.remove('drop', 'burn'); D.active = false;
+    boomSound();
+    burst(c.x, c.y, { count: 150, power: 2.2, emoji: '💥' });
+    burst(c.x, c.y, { count: 60, power: 1.2 });
+    if (!reduced) { restart(flashEl, 'go'); restart(stage, 'quake'); }
+    boomEl.textContent = rand(['KABUUM!', 'PAM!', 'BUMM!', 'PUM!']);
+    boomEl.hidden = false; restart(boomEl, 'go');
+    setTimeout(() => { boomEl.hidden = true; }, 950);
+    award('dynamite');
+    say('Kabuum!');
+    if (S.mode === 'words' && S.w.running && !S.w.wait) blastWord();
+    if (S.mode === 'snow' && S.s.running) blastSnow();
+  }
+  function cancelDynamite() {
+    clearTimeout(D.timer); cancelAnimationFrame(D.raf); hissStop();
+    D.active = false; dyn.hidden = true; dyn.classList.remove('drop', 'burn');
+  }
+  function streakHit(n, threshold) {
+    if (n === 10) award('streak10');
+    if (n > 0 && n % threshold === 0) dynamite();
   }
 
   /* ---------- näppäimistö ruudulla ---------- */
@@ -481,67 +742,100 @@ body.nofocus .focus-pill{display:inline-block}
     ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ö', 'Ä'],
     ['Z', 'X', 'C', 'V', 'B', 'N', 'M']];
   const keyEls = {};
+  function mkKey(ch, cls, label, aria) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'key' + (cls ? ' ' + cls : ''); b.dataset.k = ch;
+    if (label) b.textContent = label;
+    b.setAttribute('aria-label', aria);
+    return b;
+  }
   ROWS.forEach((r, i) => {
     const row = document.createElement('div');
     row.className = 'row' + (i === 0 ? ' digits' : '');
-    r.forEach((ch) => {
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'key'; b.dataset.ch = ch;
-      b.setAttribute('aria-label', isDigit(ch) ? NUMS[Number(ch)] : 'kirjain ' + ch);
-      row.appendChild(b); keyEls[ch] = b;
-    });
+    if (i === 3) row.appendChild(mkKey('CASE', 'fn', 'ABC', 'Isot tai pienet kirjaimet'));
+    r.forEach((ch) => { const b = mkKey(ch, '', '', isDigit(ch) ? NUMS[Number(ch)] : 'kirjain ' + ch); row.appendChild(b); keyEls[ch] = b; });
     kb.appendChild(row);
   });
-  const digitRow = kb.querySelector('.digits');
-  function keyLabels() { for (const [ch, el] of Object.entries(keyEls)) el.textContent = isDigit(ch) ? ch : cased(ch); }
+  const special = document.createElement('div');
+  special.className = 'row special';
+  const kBack = mkKey('BACK', 'fn', '⌫ Pyyhi', 'Pyyhi'), kDash = mkKey('-', 'fn', '-', 'Väliviiva'),
+        kSpace = mkKey(' ', 'fn space', 'välilyönti', 'Välilyönti'), kOk = mkKey('OK', 'fn ok', 'Valmis', 'Valmis');
+  [kBack, kDash, kSpace, kOk].forEach((b) => special.appendChild(b));
+  kb.appendChild(special);
+  keyEls[' '] = kSpace;
+  const digitRow = kb.querySelector('.digits'), caseKey = kb.querySelector('[data-k="CASE"]');
+
+  function keyLabels() {
+    ROWS.flat().forEach((ch) => { keyEls[ch].textContent = isDigit(ch) ? ch : cased(ch); });
+    caseKey.textContent = S.upper ? 'ABC' : 'abc';
+    caseKey.setAttribute('aria-pressed', String(!S.upper));
+  }
   function markKeys() {
-    for (const [ch, el] of Object.entries(keyEls)) {
-      const on = S.mode === 'free' && S.found.has(ch);
-      el.classList.toggle('found', on);
-      if (on) paint(el, ch);
-    }
+    ROWS.flat().forEach((ch) => {
+      const el = keyEls[ch], on = S.mode === 'free' && !S.naming && S.found.has(ch);
+      el.classList.toggle('found', on); if (on) paint(el, ch);
+    });
+  }
+  function specialKeys() {
+    const space = S.naming || (S.mode === 'words' && S.w.level === LEVELS.length);
+    kBack.hidden = kDash.hidden = kOk.hidden = !S.naming;
+    kSpace.hidden = !space;
+    special.hidden = !S.naming && !space;
+    digitRow.hidden = S.naming || S.mode !== 'free';
   }
   function flashKey(ch) { const el = keyEls[ch]; if (!el) return; el.classList.add('down'); setTimeout(() => el.classList.remove('down'), 120); }
   function hintKey(ch) { clearHints(); const el = keyEls[ch]; if (el) el.classList.add('hint'); }
   function clearHints() { kb.querySelectorAll('.hint').forEach((e) => e.classList.remove('hint')); }
-  kb.addEventListener('pointerdown', (e) => {
-    const b = e.target.closest('.key'); if (!b) return;
-    e.preventDefault(); input(b.dataset.ch);
-  });
-  kb.addEventListener('click', (e) => { // näppäimistökäyttäjät (Tab + Enter)
-    const b = e.target.closest('.key'); if (b && e.detail === 0) input(b.dataset.ch);
-  });
+  function pressKey(k) {
+    if (k === 'CASE') toggleCase();
+    else if (k === 'BACK' || k === 'OK' || k === '-' || k === ' ') specialKey(k);
+    else input(k);
+  }
+  kb.addEventListener('pointerdown', (e) => { const b = e.target.closest('.key'); if (!b) return; e.preventDefault(); pressKey(b.dataset.k); });
+  kb.addEventListener('click', (e) => { const b = e.target.closest('.key'); if (b && e.detail === 0) pressKey(b.dataset.k); });
 
   /* ---------- laskuri ---------- */
   const chip = (id, k, v) => `<div class="chip" id="c-${id}"><span class="k">${k}</span><span class="v" id="v-${id}">${v}</span></div>`;
+  const streakChip = (th) => `<div class="chip wide" id="c-streak"><span class="k">Putki · 🧨 ${th}</span><span class="v" id="v-streak">0</span><span class="meter fuse"><i id="v-smeter"></i></span></div>`;
   function renderStats() {
     if (S.mode === 'free') {
       stats.innerHTML = chip('presses', 'Painalluksia', 0) +
         `<div class="chip wide"><span class="k">Löydetyt kirjaimet</span><span class="v" id="v-found">0 / ${ALPHA.length}</span><span class="meter"><i id="v-meter"></i></span></div>` +
         `<button type="button" class="btn small" data-act="reset">Aloita alusta</button>`;
     } else if (S.mode === 'find') {
-      stats.innerHTML = chip('hits', 'Osumat', 0) + chip('streak', 'Putki', 0) + chip('best', 'Paras putki', 0);
+      stats.innerHTML = chip('hits', 'Osumat', 0) + streakChip(DYN.find) + chip('best', 'Paras putki', 0);
+    } else if (S.mode === 'words') {
+      stats.innerHTML = chip('time', 'Aika', ROUND_MS / 1000) + chip('letters', 'Kirjaimet', 0) + streakChip(DYN.words) + chip('acc', 'Tarkkuus', '–');
     } else {
-      stats.innerHTML = chip('time', 'Aika', ROUND_MS / 1000) + chip('words', 'Sanat', 0) + chip('letters', 'Kirjaimet', 0) + chip('acc', 'Tarkkuus', '–');
+      stats.innerHTML = chip('hearts', 'Sydämet', '') + chip('hits', 'Osumat', 0) + streakChip(DYN.snow) + chip('best', 'Ennätys', 0);
     }
     updateStats();
   }
   const setV = (id, v) => { const e = document.getElementById('v-' + id); if (e) e.textContent = v; };
-  function accuracy() { const w = S.w, t = w.letters + w.wrong; return t ? Math.round((w.letters / t) * 100) : null; }
+  function setStreak(n, th) {
+    setV('streak', n);
+    const m = document.getElementById('v-smeter');
+    if (m) m.style.width = (n > 0 && n % th === 0 ? 100 : (n % th) / th * 100) + '%';
+  }
+  function accuracy(ok, bad) { const t = ok + bad; return t ? Math.round((ok / t) * 100) : null; }
   function updateStats() {
+    const p = S.p;
     if (S.mode === 'free') {
       setV('presses', S.presses); setV('found', `${S.found.size} / ${ALPHA.length}`);
       const m = document.getElementById('v-meter'); if (m) m.style.width = (S.found.size / ALPHA.length * 100) + '%';
     } else if (S.mode === 'find') {
-      setV('hits', S.f.hits); setV('streak', S.f.streak); setV('best', S.f.best);
+      setV('hits', S.f.hits); setStreak(S.f.streak, DYN.find); setV('best', p ? p.findBest : 0);
+    } else if (S.mode === 'words') {
+      setV('letters', S.w.letters); setStreak(S.w.streak, DYN.words);
+      const a = accuracy(S.w.letters, S.w.wrong); setV('acc', a === null ? '–' : a + ' %');
     } else {
-      setV('words', S.w.words); setV('letters', S.w.letters);
-      const a = accuracy(); setV('acc', a === null ? '–' : a + ' %');
+      setV('hearts', '❤️'.repeat(Math.max(0, S.s.hearts)) + '🤍'.repeat(HEARTS - Math.max(0, S.s.hearts)));
+      setV('hits', S.s.hits); setStreak(S.s.streak, DYN.snow); setV('best', p ? p.snowBest : 0);
     }
   }
-  stats.addEventListener('click', (e) => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act); });
+  stats.addEventListener('click', (e) => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act, b); });
 
-  /* ---------- näkymät ---------- */
+  /* ---------- kirjainnäkymä ---------- */
   function pickFor(ch) {
     const list = PICS[ch]; if (!list) return null;
     S.rot[ch] = ((S.rot[ch] ?? -1) + 1) % list.length;
@@ -554,10 +848,8 @@ body.nofocus .focus-pill{display:inline-block}
     if (pick) {
       const [w, em] = pick;
       wordEl.innerHTML = `<span class="em">${em}</span><span class="w"><b>${cased(w[0])}</b>${cased(w.slice(1))}</span>`;
-    } else if (ch === 'Å') {
-      wordEl.innerHTML = `<span class="em">✨</span><span class="note">ruotsalainen oo</span>`;
     } else {
-      wordEl.innerHTML = `<span class="em">✨</span><span class="note">harvinainen kirjain</span>`;
+      wordEl.innerHTML = `<span class="em">✨</span><span class="note">${ch === 'Å' ? 'ruotsalainen oo' : 'harvinainen kirjain'}</span>`;
     }
   }
   function renderNumber(d, em) {
@@ -566,24 +858,14 @@ body.nofocus .focus-pill{display:inline-block}
     bUp.textContent = d; bLow.hidden = true;
     wordEl.innerHTML = `<span class="em count" aria-hidden="true">${em.repeat(n)}</span><span class="w">${cased(NUMS[n])}</span>`;
   }
-  function renderView() {
-    const v = S.view; if (!v) return;
-    if (v.kind === 'digit') renderNumber(v.ch, v.em); else renderLetter(v.ch, v.pick);
-  }
-  function renderTiles() {
-    const [word, em] = S.w.cur, letters = [...word];
-    wEmoji.textContent = em;
-    tiles.style.setProperty('--n', Math.max(letters.length, 6));
-    tiles.innerHTML = letters.map((c, i) => `<span class="tile${i < S.w.pos ? ' done' : ''}${i === S.w.pos ? ' cur' : ''}">${cased(c)}</span>`).join('');
-  }
+  function renderView() { const v = S.view; if (!v) return; if (v.kind === 'digit') renderNumber(v.ch, v.em); else renderLetter(v.ch, v.pick); }
 
   /* ---------- vapaa leikki ---------- */
   function doFree(ch, origin) {
     S.presses++;
     let em;
     if (isDigit(ch)) {
-      em = rand(COUNT);
-      S.view = { kind: 'digit', ch, em };
+      em = rand(COUNT); S.view = { kind: 'digit', ch, em };
       renderNumber(ch, em); sfx.digit(ch); say(NUMS[Number(ch)]);
       live.textContent = NUMS[Number(ch)];
     } else {
@@ -593,42 +875,31 @@ body.nofocus .focus-pill{display:inline-block}
       em = pick ? pick[1] : '✨';
       say(NAMES[ch] + (pick ? ', ' + pick[0] : ''));
       live.textContent = ch + (pick ? ' niin kuin ' + pick[0] : '');
-      if (!S.found.has(ch)) {
-        S.found.add(ch); markKeys();
-        if (S.found.size === ALPHA.length) setTimeout(celebrate, 600);
-      }
+      if (!S.found.has(ch)) { S.found.add(ch); markKeys(); if (S.found.size === ALPHA.length) setTimeout(celebrate, 600); }
     }
     S.freeView = S.view;
     pop(block);
-    const c = centerOf(block);
-    burst(c.x, c.y, { count: 46, emoji: em });
+    const c = centerOf(block); burst(c.x, c.y, { count: 46, emoji: em });
     if (origin) burst(origin.x, origin.y, { count: 16, power: 0.7 });
     updateStats();
   }
   function celebrate() {
-    sfx.fanfare();
+    sfx.fanfare(); award('aakkoset');
     [0, 250, 500].forEach((t) => setTimeout(() => burst(W * (0.2 + Math.random() * 0.6), H * (0.3 + Math.random() * 0.3), { count: 70, emoji: '⭐', power: 1.3 }), t));
-    showOverlay(`<div class="mascot" aria-hidden="true">🐓</div><h2>Koko aapinen löytyi!</h2>
+    showOverlay(`<div class="mascot" aria-hidden="true">🐓</div><h2>Koko aapinen löytyi${S.p ? ', ' + esc(S.p.name) : ''}!</h2>
       <p>Löysit kaikki ${ALPHA.length} kirjainta. Aapiskukko on ylpeä sinusta.</p>
-      <div class="acts"><button type="button" class="big" data-act="reset">Kerää uudestaan</button><button type="button" class="btn" data-act="close">Jatka leikkiä</button></div>`, 1500);
+      <div class="acts"><button type="button" class="big" data-act="reset">Kerää uudestaan</button><button type="button" class="btn" data-act="close">Jatka leikkiä</button></div>`, 1500, 'celebrate');
   }
 
   /* ---------- etsi kirjain ---------- */
   function newTarget() {
-    const f = S.f;
-    let t;
-    do {
-      t = rand(ALPHA);
-      if (RARE.has(t) && Math.random() < 0.6) t = f.target; // harvinaiset harvemmin
-    } while (t === f.target);
-    f.target = t; f.misses = 0; f.locked = false;
-    clearHints();
-    const pick = pickFor(t);
-    f.em = pick ? pick[1] : '✨';
+    const f = S.f; let t;
+    do { t = rand(ALPHA); if (RARE.has(t) && Math.random() < 0.6) t = f.target; } while (t === f.target);
+    f.target = t; f.misses = 0; f.locked = false; clearHints();
+    const pick = pickFor(t); f.em = pick ? pick[1] : '✨';
     S.view = { kind: 'letter', ch: t, pick };
     renderLetter(t, pick); pop(block);
-    say('Etsi ' + NAMES[t]);
-    live.textContent = 'Etsi kirjain ' + t;
+    say('Etsi ' + NAMES[t]); live.textContent = 'Etsi kirjain ' + t;
     clearTimeout(f.hintT);
     f.hintT = setTimeout(() => { if (S.mode === 'find' && f.target === t && !f.locked) hintKey(t); }, 6000);
   }
@@ -637,15 +908,14 @@ body.nofocus .focus-pill{display:inline-block}
     if (f.locked || !f.target || isDigit(ch)) return;
     if (ch === f.target) {
       f.hits++; f.streak++;
-      if (f.streak > f.best) { f.best = f.streak; store.set('bestStreak', f.best); }
-      f.locked = true; clearTimeout(f.hintT); clearHints();
-      sfx.good();
+      if (S.p && f.streak > S.p.findBest) { S.p.findBest = f.streak; savePlayer(); }
+      f.locked = true; clearTimeout(f.hintT); clearHints(); sfx.good();
       const c = centerOf(block); burst(c.x, c.y, { count: 60, emoji: f.em, power: 1.1 });
       live.textContent = 'Oikein!';
+      streakHit(f.streak, DYN.find);
       setTimeout(() => { if (S.mode === 'find') newTarget(); }, 650);
     } else {
-      f.streak = 0; f.misses++;
-      sfx.bad(); shake(block);
+      f.streak = 0; f.misses++; sfx.bad(); shake(block);
       if (f.misses >= 2) hintKey(f.target);
     }
     updateStats();
@@ -653,23 +923,61 @@ body.nofocus .focus-pill{display:inline-block}
 
   /* ---------- kirjoita sana ---------- */
   function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  const levelWords = () => LEVELS[S.w.level - 1].words;
+  function setWordsPrompt() { prompt.textContent = `Taso ${S.w.level}: ${LEVELS[S.w.level - 1].name}`; }
+  function previewWord() { S.w.list = shuffle(levelWords().slice()); S.w.cur = S.w.list.pop(); S.w.pos = 0; renderTiles(); }
+  function renderTiles() {
+    const [word, em] = S.w.cur, groups = word.split(' ');
+    wEmoji.textContent = em;
+    const longest = Math.max(...groups.map((g) => [...g].length));
+    tiles.style.setProperty('--n', Math.max(longest + (groups.length > 1 ? 1 : 0), 6));
+    let i = 0;
+    const tile = (c, cls) => {
+      const idx = i++, st = idx < S.w.pos ? ' done' : idx === S.w.pos ? ' cur' : '';
+      return `<span class="tile${cls}${st}">${c === ' ' ? '␣' : cased(c)}</span>`;
+    };
+    tiles.innerHTML = groups.map((g, gi) => `<span class="grp">${[...g].map((c) => tile(c, '')).join('')}${gi < groups.length - 1 ? tile(' ', ' sp') : ''}</span>`).join('');
+    S.w.tileEls = [...tiles.querySelectorAll('.tile')];
+  }
   function nextWord() {
     const w = S.w;
-    if (!w.list.length) w.list = shuffle(WORDS.slice());
+    if (!w.list.length) w.list = shuffle(levelWords().slice());
     w.cur = w.list.pop(); w.pos = 0; w.wait = false;
     renderTiles(); pop(wEmoji); clearHints();
-    say(w.cur[0]);
-    live.textContent = 'Kirjoita ' + w.cur[0];
+    say(w.cur[0]); live.textContent = 'Kirjoita ' + w.cur[0];
+  }
+  const recordFor = (lvl) => (S.p && S.p.best[lvl]) ? S.p.best[lvl].letters : null;
+  function setupRace() {
+    const b = recordFor(S.w.level);
+    laneGhost.hidden = !b;
+    raceCap.textContent = b ? `Aja ennätyksesi ohi: ${b} kirjainta` : `Tavoite: ${GOAL} kirjainta`;
+    updateRace();
+  }
+  function moveCar(car, p) { const max = car.parentElement.clientWidth - car.offsetWidth; car.style.transform = `translateX(${Math.max(0, p * max)}px)`; }
+  function updateRace() {
+    const w = S.w, b = recordFor(w.level), finish = b || GOAL;
+    const elapsed = w.running ? Math.min(1, (performance.now() - w.startAt) / ROUND_MS) : 0;
+    moveCar(carMe, Math.min(1, w.letters / finish));
+    if (b) moveCar(carGhost, elapsed);
+  }
+  function checkPass() {
+    const w = S.w; if (w.passed) return;
+    const b = recordFor(w.level);
+    if (b ? w.letters > b : w.letters >= GOAL) {
+      w.passed = true;
+      const c = centerOf(carMe); burst(c.x, c.y, { count: 40, emoji: '🏁' });
+      if (b) { award('ghost'); toast('<span class="te">🏁</span><span>Ohitit ennätyksesi!</span>'); }
+      else toast('<span class="te">🏁</span><span>Tavoite saavutettu!</span>');
+    }
   }
   function startRound() {
     const w = S.w;
-    Object.assign(w, { running: true, words: 0, letters: 0, wrong: 0 });
-    w.endAt = performance.now() + ROUND_MS;
-    hideOverlay(); nextWord();
+    cancelDynamite();
+    Object.assign(w, { running: true, words: 0, letters: 0, wrong: 0, streak: 0, passed: false });
+    w.list = shuffle(levelWords().slice());
+    w.startAt = performance.now(); w.endAt = w.startAt + ROUND_MS;
+    hideOverlay(); setWordsPrompt(); specialKeys(); renderStats(); nextWord(); setupRace();
     clearInterval(w.timer); w.timer = setInterval(tickRound, 100);
-    setV('time', ROUND_MS / 1000);
-    const c = document.getElementById('c-time'); if (c) c.classList.remove('low');
-    updateStats();
   }
   function tickRound() {
     const left = S.w.endAt - performance.now();
@@ -677,181 +985,443 @@ body.nofocus .focus-pill{display:inline-block}
     const s = Math.ceil(left / 1000);
     setV('time', s);
     const c = document.getElementById('c-time'); if (c) c.classList.toggle('low', s <= 10);
+    updateRace();
   }
   function stopRound() { clearInterval(S.w.timer); S.w.running = false; }
-  function endRound() {
-    const w = S.w;
-    stopRound(); clearHints(); setV('time', 0);
-    const res = { letters: w.letters, words: w.words, acc: accuracy() };
-    const record = w.letters > 0 && (!w.best || w.letters > w.best.letters);
-    const prev = w.best;
-    if (record) { w.best = res; store.set('bestRound', res); }
-    sfx.fanfare();
-    [0, 300].forEach((t) => setTimeout(() => burst(W / 2, H * 0.45, { count: 60, emoji: record ? '🥚' : '⭐', power: 1.3 }), t));
-    const chips = `<div class="res">${chip('r-w', 'Sanat', res.words)}${chip('r-l', 'Kirjaimet', res.letters)}${chip('r-a', 'Tarkkuus', res.acc === null ? '–' : res.acc + ' %')}</div>`;
-    const msg = record
-      ? (prev ? `<p>Edellinen ennätys oli ${prev.letters} kirjainta. Aapiskukko muni kultamunan!</p>` : `<p>Ensimmäinen tulos tällä laitteella. Aapiskukko muni kultamunan!</p>`)
-      : (w.best ? `<p>Paras tulos tällä laitteella: <strong>${w.best.letters} kirjainta</strong>.</p>` : '<p>Yritä uudestaan!</p>');
-    showOverlay(`<h2>${record ? 'Uusi ennätys!' : 'Aika loppui!'}</h2>${chips}${msg}
-      <div class="acts"><button type="button" class="big" data-act="start">Uusi kierros</button></div>`, 1200);
-  }
-  function startCard() {
-    const b = S.w.best;
-    showOverlay(`<h2>Kirjoita sana</h2>
-      <p>Kirjoita kuvan sana. Jokainen oikea kirjain on piste, ja aikaa on yksi minuutti.</p>
-      ${b ? `<p>Paras tulos tällä laitteella: <strong>${b.letters} kirjainta</strong>, ${b.words} sanaa.</p>` : ''}
-      <div class="acts"><button type="button" class="big" data-act="start">Aloita</button></div>
-      <p class="fine">tai paina välilyöntiä</p>`, 0);
-  }
   function doWords(ch) {
     const w = S.w;
     if (!w.running || w.wait || isDigit(ch)) return;
-    const word = [...w.cur[0]], need = up(word[w.pos]), els = tiles.children;
+    const chars = [...w.cur[0]], need = up(chars[w.pos]), el = w.tileEls[w.pos];
     if (ch === need) {
-      w.letters++;
-      els[w.pos].classList.remove('cur'); els[w.pos].classList.add('done');
-      w.pos++; clearHints(); sfx.letter(ch);
-      if (w.pos >= word.length) {
-        w.words++; w.wait = true; sfx.word();
-        const c = centerOf(tiles); burst(c.x, c.y, { count: 50, emoji: w.cur[1] });
-        setTimeout(() => { if (S.w.running) nextWord(); }, 420);
-      } else {
-        els[w.pos].classList.add('cur');
-      }
+      w.letters++; w.streak++;
+      el.classList.remove('cur'); el.classList.add('done'); w.pos++; clearHints();
+      if (ch === ' ') tone(440, 0, 0.08, { vol: 0.1 }); else sfx.letter(ch);
+      checkPass(); streakHit(w.streak, DYN.words);
+      if (w.pos >= chars.length) completeWord(); else w.tileEls[w.pos].classList.add('cur');
     } else {
-      w.wrong++; sfx.bad(); shake(els[w.pos]); hintKey(need);
+      w.wrong++; w.streak = 0; sfx.bad(); shake(el); hintKey(need);
+    }
+    updateStats(); updateRace();
+  }
+  function completeWord() {
+    const w = S.w;
+    w.words++; w.wait = true; sfx.word();
+    const c = centerOf(tiles); burst(c.x, c.y, { count: 50, emoji: w.cur[1] });
+    award('first-word');
+    if (/[äö]/.test(w.cur[0]) && S.p) { S.p.umlaut = (S.p.umlaut || 0) + 1; savePlayer(); if (S.p.umlaut >= 10) award('umlaut'); }
+    setTimeout(() => { if (S.w.running) nextWord(); }, 420);
+  }
+  function blastWord() {
+    const w = S.w;
+    w.wait = true; w.words++;
+    w.tileEls.forEach((t, i) => { if (i >= w.pos) { const c = centerOf(t); burst(c.x, c.y, { count: 10, power: 0.8 }); } });
+    toast('<span class="te">💥</span><span>Dynamiitti räjäytti sanan!</span>');
+    setTimeout(() => { if (S.w.running) nextWord(); }, 500);
+    updateStats();
+  }
+  const starHTML = (n) => [0, 1, 2].map((i) => `<span class="${i < n ? 'on' : 'off'}">★</span>`).join('');
+  function endRound() {
+    const w = S.w, p = S.p, lvl = w.level;
+    stopRound(); clearHints(); setV('time', 0); updateRace();
+    const res = { letters: w.letters, words: w.words, acc: accuracy(w.letters, w.wrong) };
+    const prev = p.best[lvl] || null;
+    const record = res.letters > 0 && (!prev || res.letters > prev.letters);
+    if (record) p.best[lvl] = res;
+    const beat = prev ? res.letters > prev.letters : res.letters >= GOAL;
+    const stars = res.letters === 0 ? 0 : 1 + (res.acc >= 90 ? 1 : 0) + (beat ? 1 : 0);
+    p.stars[lvl] = Math.max(p.stars[lvl] || 0, stars);
+    let lvlMsg;
+    if (res.words >= MIN_WORDS_FOR_LEVEL && lvl < LEVELS.length) {
+      w.level = lvl + 1; p.level = Math.max(p.level, w.level);
+      lvlMsg = `Seuraavaksi vaikeammat sanat: <strong>taso ${w.level}, ${LEVELS[w.level - 1].name.toLowerCase()}</strong>.`;
+    } else if (lvl < LEVELS.length) {
+      lvlMsg = `Kirjoita vähintään ${MIN_WORDS_FOR_LEVEL} sanaa, niin pääset tasolle ${lvl + 1}.`;
+    } else {
+      lvlMsg = 'Olet ylimmällä tasolla!';
+    }
+    savePlayer();
+    if (stars === 3) award('stars3');
+    if (w.wrong === 0 && res.letters >= 15) award('perfect');
+    if (p.level >= LEVELS.length) award('level5');
+    sfx.fanfare();
+    [0, 300].forEach((t) => setTimeout(() => burst(W / 2, H * 0.45, { count: 60, emoji: record ? '🥚' : '⭐', power: 1.3 }), t));
+    const recMsg = record
+      ? (prev ? `<p>Edellinen ennätys oli ${prev.letters} kirjainta. Aapiskukko muni kultamunan!</p>` : '<p>Ensimmäinen tulos tällä tasolla. Aapiskukko muni kultamunan!</p>')
+      : `<p>Ennätyksesi tällä tasolla: <strong>${prev ? prev.letters : 0} kirjainta</strong>.</p>`;
+    showOverlay(`<h2>${record ? 'Uusi ennätys' : 'Aika loppui'}, ${esc(p.name)}!</h2>
+      <div class="stars" aria-label="${stars} tähteä kolmesta">${starHTML(stars)}</div>
+      <div class="res">${chip('r-w', 'Sanat', res.words)}${chip('r-l', 'Kirjaimet', res.letters)}${chip('r-a', 'Tarkkuus', res.acc === null ? '–' : res.acc + ' %')}</div>
+      ${recMsg}<p>${lvlMsg}</p>
+      <div class="acts"><button type="button" class="big" data-act="start">Seuraava kierros</button><button type="button" class="btn" data-act="levels">Valitse taso</button></div>`, 1200, 'results');
+  }
+  function startCard() {
+    const p = S.p, w = S.w, L = LEVELS[w.level - 1], b = recordFor(w.level), st = p.stars[w.level] || 0;
+    showOverlay(`<h2>Kirjoita sana</h2>
+      <div class="lvl">
+        <button type="button" class="arrow" data-act="lvl-" aria-label="Helpompi taso" ${w.level <= 1 ? 'disabled' : ''}>‹</button>
+        <div class="info"><strong>Taso ${w.level}</strong><span class="nm">${L.name}</span><span class="mini" aria-label="${st} tähteä">${'★'.repeat(st)}${'☆'.repeat(3 - st)}</span></div>
+        <button type="button" class="arrow" data-act="lvl+" aria-label="Vaikeampi taso" ${w.level >= p.level ? 'disabled' : ''}>›</button>
+      </div>
+      <p>${L.desc}. Aikaa on yksi minuutti.</p>
+      ${b ? `<p>Ennätyksesi: <strong>${b} kirjainta</strong>. Haamuauto ajaa sitä vauhtia.</p>` : `<p>Tavoite: <strong>${GOAL} kirjainta</strong>.</p>`}
+      <div class="acts"><button type="button" class="big" data-act="start">Aloita</button></div>
+      <p class="fine">tai paina välilyöntiä · ${DYN.words} oikein putkeen pudottaa dynamiitin</p>`, 0, 'start');
+  }
+  function changeLevel(d) {
+    const w = S.w, n = w.level + d;
+    if (n < 1 || n > S.p.level) return;
+    w.level = n; setWordsPrompt(); previewWord(); setupRace(); specialKeys(); startCard();
+  }
+
+  /* ---------- lumisade ---------- */
+  const GROUND = 18;
+  let SC = null;
+  function snowColors() {
+    const cs = getComputedStyle(root), g = (v) => cs.getPropertyValue(v).trim();
+    SC = { surface: g('--surface'), ink: g('--ink'), line: g('--line'), snow: g('--snow'), toys: [1, 2, 3, 4, 5, 6].map((n) => g('--t' + n)) };
+  }
+  const flakeR = () => Math.max(18, Math.min(32, Math.min(W, H) * 0.07));
+  function previewFlakes() {
+    const r = flakeR();
+    return [['K', 0.22, 0.3], ['A', 0.5, 0.48], ['Ä', 0.78, 0.36]].map(([ch, x, y]) => ({ ch, x: W * x, y: H * y, r, ci: colorIdx(ch) - 1, rot: 0.3 }));
+  }
+  function drawFlake(f) {
+    const { x, y, r } = f, col = SC.toys[f.ci];
+    sx.save(); sx.translate(x, y);
+    sx.save(); sx.rotate(f.rot || 0); sx.strokeStyle = SC.line; sx.lineWidth = 2; sx.lineCap = 'round';
+    for (let i = 0; i < 6; i++) {
+      sx.rotate(Math.PI / 3); sx.beginPath();
+      sx.moveTo(0, r * 0.9); sx.lineTo(0, r * 1.38);
+      sx.moveTo(0, r * 1.16); sx.lineTo(r * 0.16, r * 1.28);
+      sx.moveTo(0, r * 1.16); sx.lineTo(-r * 0.16, r * 1.28);
+      sx.stroke();
+    }
+    sx.restore();
+    sx.beginPath(); sx.arc(0, 0, r, 0, Math.PI * 2); sx.fillStyle = SC.surface; sx.fill();
+    sx.lineWidth = 3; sx.strokeStyle = col; sx.stroke();
+    sx.fillStyle = SC.ink; sx.font = `700 ${Math.round(r * 1.1)}px Andika, Verdana, sans-serif`;
+    sx.textAlign = 'center'; sx.textBaseline = 'middle'; sx.fillText(cased(f.ch), 0, r * 0.06);
+    sx.restore();
+  }
+  function drawSnow(flakes) {
+    if (!SC) snowColors();
+    sx.clearRect(0, 0, W, H);
+    const gy = H - GROUND;
+    sx.fillStyle = SC.snow; sx.beginPath(); sx.moveTo(0, H); sx.lineTo(0, gy + 4);
+    for (let x = 0; x <= W; x += 28) sx.quadraticCurveTo(x + 14, gy - 5, x + 28, gy + 4);
+    sx.lineTo(W, H); sx.closePath(); sx.fill();
+    flakes.forEach(drawFlake);
+  }
+  function spawnFlake() {
+    const s = S.s, r = flakeR();
+    let ch = 'A';
+    for (let t = 0; t < 8; t++) {
+      ch = rand(ALPHA);
+      if (RARE.has(ch) && Math.random() < 0.7) continue;
+      if (!s.flakes.some((f) => f.ch === ch)) break;
+    }
+    let x0 = r + 10;
+    for (let t = 0; t < 6; t++) {
+      x0 = r + 10 + Math.random() * Math.max(1, W - 2 * r - 20);
+      if (!s.flakes.some((f) => f.y < r * 4 && Math.abs(f.x0 - x0) < r * 2.6)) break;
+    }
+    s.flakes.push({ ch, x0, x: x0, y: -r * 1.4, r, ci: colorIdx(ch) - 1, phase: Math.random() * 6, wamp: 6 + Math.random() * 10, wspeed: 0.8 + Math.random() * 0.8, rot: Math.random(), spin: (Math.random() - 0.5) * 0.6 });
+  }
+  function snowStep(now) {
+    const s = S.s; if (!s.running) return;
+    const dt = Math.min(0.05, (now - s.last) / 1000); s.last = now;
+    s.next -= dt;
+    if (s.next <= 0) { spawnFlake(); s.next = Math.max(0.75, 2.3 - s.hits * 0.03) * (0.8 + Math.random() * 0.4); }
+    const fall = Math.max(3.6, 9.5 - s.hits * 0.08), ground = H - GROUND;
+    for (let i = s.flakes.length - 1; i >= 0; i--) {
+      const f = s.flakes[i];
+      f.y += ((ground + f.r * 1.4) / fall) * dt; f.phase += dt * f.wspeed; f.x = f.x0 + Math.sin(f.phase) * f.wamp; f.rot += f.spin * dt;
+      if (f.y + f.r >= ground) { s.flakes.splice(i, 1); loseHeart(f); }
+    }
+    drawSnow(s.flakes);
+    let lowest = null; s.flakes.forEach((f) => { if (!lowest || f.y > lowest.y) lowest = f; });
+    if (lowest && lowest.y > ground * 0.62) { if (s.hintCh !== lowest.ch) { hintKey(lowest.ch); s.hintCh = lowest.ch; } }
+    else if (s.hintCh) { clearHints(); s.hintCh = null; }
+    if (s.hearts <= 0) { snowEnd(); return; }
+    s.raf = requestAnimationFrame(snowStep);
+  }
+  function loseHeart(f) {
+    const s = S.s;
+    s.hearts--; s.streak = 0; sfx.heart();
+    burst(f.x, H - GROUND, { count: 14, power: 0.6 });
+    shake(document.getElementById('c-hearts'));
+    updateStats();
+  }
+  function doSnow(ch) {
+    const s = S.s;
+    if (!s.running || isDigit(ch)) return;
+    let bi = -1;
+    s.flakes.forEach((f, i) => { if (f.ch === ch && (bi < 0 || f.y > s.flakes[bi].y)) bi = i; });
+    if (bi >= 0) {
+      const f = s.flakes.splice(bi, 1)[0];
+      s.hits++; s.streak++; s.top = Math.max(s.top, s.streak);
+      sfx.letter(ch); burst(f.x, f.y, { count: 24, power: 0.9 });
+      if (s.hintCh === ch) { clearHints(); s.hintCh = null; }
+      streakHit(s.streak, DYN.snow);
+    } else {
+      s.misses++; s.streak = 0; sfx.bad();
     }
     updateStats();
   }
+  function blastSnow() {
+    const s = S.s, n = s.flakes.length;
+    s.flakes.forEach((f) => burst(f.x, f.y, { count: 14, power: 0.9 }));
+    s.flakes = []; s.hits += n;
+    if (n) toast(`<span class="te">💥</span><span>Räjähdys sulatti ${n} hiutaletta!</span>`);
+    updateStats();
+  }
+  function snowStart() {
+    const s = S.s;
+    cancelDynamite(); snowColors();
+    Object.assign(s, { running: true, flakes: [], hearts: HEARTS, hits: 0, misses: 0, streak: 0, top: 0, next: 0.4, hintCh: null });
+    hideOverlay(); renderStats(); clearHints();
+    s.last = performance.now(); cancelAnimationFrame(s.raf); s.raf = requestAnimationFrame(snowStep);
+  }
+  function snowStop() { S.s.running = false; cancelAnimationFrame(S.s.raf); clearHints(); S.s.hintCh = null; }
+  function snowEnd() {
+    const s = S.s, p = S.p;
+    snowStop(); s.flakes = []; drawSnow([]);
+    const prev = p.snowBest || 0, record = s.hits > prev;
+    if (record) p.snowBest = s.hits;
+    savePlayer(); updateStats();
+    if (s.hits >= 50) award('snow50');
+    sfx.fanfare();
+    burst(W / 2, H * 0.45, { count: 60, emoji: record ? '🥚' : '❄️', power: 1.3 });
+    const acc = accuracy(s.hits, s.misses);
+    showOverlay(`<div class="mascot" aria-hidden="true">⛄</div><h2>${record ? 'Uusi ennätys' : 'Lumisade loppui'}, ${esc(p.name)}!</h2>
+      <div class="res">${chip('r-h', 'Hiutaleet', s.hits)}${chip('r-s', 'Paras putki', s.top)}${chip('r-a', 'Tarkkuus', acc === null ? '–' : acc + ' %')}</div>
+      <p>${record ? (prev ? `Edellinen ennätys oli ${prev} hiutaletta.` : 'Ensimmäinen tuloksesi lumisateessa.') : `Ennätyksesi: <strong>${prev} hiutaletta</strong>.`}</p>
+      <div class="acts"><button type="button" class="big" data-act="snow-start">Uusi lumisade</button></div>`, 1200, 'snow-results');
+  }
+  function snowStartCard() {
+    const b = S.p.snowBest || 0;
+    showOverlay(`<div class="mascot" aria-hidden="true">❄️</div><h2>Lumisade</h2>
+      <p>Kirjaimet sataa taivaalta. Paina oikeaa kirjainta ennen kuin hiutale osuu maahan. Sinulla on ${HEARTS} sydäntä, ja lumisade kiihtyy.</p>
+      ${b ? `<p>Ennätyksesi: <strong>${b} hiutaletta</strong>.</p>` : ''}
+      <div class="acts"><button type="button" class="big" data-act="snow-start">Aloita</button></div>
+      <p class="fine">tai paina välilyöntiä · ${DYN.snow} oikein putkeen räjäyttää kaikki hiutaleet</p>`, 0, 'snow-start');
+  }
+
+  /* ---------- nimi ---------- */
+  function styleFor(c) { const n = ALPHA.includes(up(c)) ? colorIdx(c) : 4; return `--c:var(--t${n});--oc:${n === 2 ? 'var(--on-yellow)' : 'var(--on-toy)'}`; }
+  function openName() {
+    stopEverything();
+    S.naming = true; S.nameBuf = '';
+    const list = store.get('players', []);
+    showOverlay(`<div class="mascot" aria-hidden="true">👋</div><h2>Kuka pelaa?</h2>
+      <p>Kirjoita oma nimesi näppäimistöllä.</p>
+      <div class="namebox" id="nameBox"></div>
+      <p class="fine">Nimi alkaa aina isolla kirjaimella.</p>
+      <div class="acts"><button type="button" class="big" data-act="name-ok" id="nameOk" disabled>Valmis</button>${S.p ? '<button type="button" class="btn" data-act="name-cancel">Peruuta</button>' : ''}</div>
+      ${list.length ? `<p class="fine">Tai valitse nimesi:</p><div class="players">${list.map((n) => `<button type="button" class="pchip" data-act="pick" data-name="${esc(n)}">${esc(n)}</button>`).join('')}</div>` : ''}`, 0, 'name');
+    renderNameBox(); specialKeys(); markKeys();
+  }
+  function renderNameBox() {
+    const box = document.getElementById('nameBox'); if (!box) return;
+    const disp = capWords(S.nameBuf);
+    box.innerHTML = [...disp].map((c) => c === ' ' ? '<span class="nsp"></span>' : `<span class="nt" style="${styleFor(c)}">${esc(c)}</span>`).join('') + '<span class="caret"></span>';
+    const ok = document.getElementById('nameOk'); if (ok) ok.disabled = !formatName(S.nameBuf);
+  }
+  function nameKey(ch) {
+    if (isDigit(ch) || S.nameBuf.length >= 14) return;
+    if (ch === ' ' || ch === '-') { if (!S.nameBuf || /[ -]$/.test(S.nameBuf)) return; S.nameBuf += ch; }
+    else { S.nameBuf += low(ch); sfx.letter(ch); }
+    renderNameBox();
+    const tl = document.querySelectorAll('#nameBox .nt'), lastT = tl[tl.length - 1];
+    if (lastT && ch !== ' ') { pop(lastT); const c = centerOf(lastT); burst(c.x, c.y, { count: 14, power: 0.6 }); }
+  }
+  function nameBack() { S.nameBuf = S.nameBuf.slice(0, -1); renderNameBox(); }
+  function nameOk() { const n = formatName(S.nameBuf); if (n) choosePlayer(n); }
+  function choosePlayer(name) {
+    const changed = !S.p || low(S.p.name) !== low(name);
+    S.p = loadPlayer(name); savePlayer(); rememberPlayer(S.p.name);
+    S.naming = false;
+    if (changed) { S.found.clear(); S.presses = 0; S.rot = {}; S.f.hits = 0; S.f.streak = 0; S.freeView = null; }
+    S.w.level = S.p.level; S.w.cur = null;
+    syncPlayer(); setMode(S.mode);
+    award('name');
+    toast(`<span class="te">👋</span><span>Hei, ${esc(S.p.name)}!</span>`);
+    say('Hei ' + S.p.name + '!');
+  }
+
+  /* ---------- merkit ---------- */
+  function openBadges() {
+    if (S.naming || !S.p) return;
+    if (S.w.running || S.s.running) { toast('<span class="te">⏳</span><span>Merkit näet kierroksen jälkeen.</span>'); return; }
+    const p = S.p;
+    showOverlay(`<h2>${esc(p.name)}: merkit</h2><p>${p.badges.length} / ${BADGES.length} kerätty tällä laitteella.</p>
+      <div class="badges">${BADGES.map((b) => `<div class="badge ${p.badges.includes(b.id) ? 'got' : 'locked'}"><span class="be">${b.em}</span><b>${b.name}</b><span>${b.desc}</span></div>`).join('')}</div>
+      <div class="acts"><button type="button" class="big" data-act="close">Takaisin peliin</button></div>`, 0, 'badges', true);
+  }
 
   /* ---------- päällyskortti ---------- */
-  function showOverlay(html, lockMs) { card.innerHTML = html; overlay.hidden = false; S.overlayLock = performance.now() + (lockMs || 0); }
-  function hideOverlay() { overlay.hidden = true; }
-  overlay.addEventListener('click', (e) => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act); });
-  function act(a) {
-    if (a === 'start') { if (performance.now() >= S.overlayLock) startRound(); }
-    else if (a === 'close') hideOverlay();
-    else if (a === 'reset') {
-      hideOverlay(); S.found.clear(); S.presses = 0; S.rot = {};
-      markKeys(); updateStats();
+  function showOverlay(html, lockMs, kind, wide) {
+    card.innerHTML = html; card.classList.toggle('wide', !!wide);
+    overlay.hidden = false; S.overlayKind = kind; S.overlayLock = performance.now() + (lockMs || 0);
+  }
+  function hideOverlay() { overlay.hidden = true; S.overlayKind = null; }
+  function restoreCard() {
+    if (!S.p) return;
+    if (S.mode === 'words' && !S.w.running) startCard();
+    else if (S.mode === 'snow' && !S.s.running) snowStartCard();
+  }
+  overlay.addEventListener('click', (e) => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act, b); });
+  function act(a, el) {
+    const ready = performance.now() >= S.overlayLock;
+    switch (a) {
+      case 'start': if (ready) startRound(); break;
+      case 'snow-start': if (ready) snowStart(); break;
+      case 'levels': startCard(); break;
+      case 'lvl-': changeLevel(-1); break;
+      case 'lvl+': changeLevel(1); break;
+      case 'close': hideOverlay(); restoreCard(); break;
+      case 'name-ok': nameOk(); break;
+      case 'name-cancel': S.naming = false; specialKeys(); setMode(S.mode); break;
+      case 'pick': choosePlayer(el.dataset.name); break;
+      case 'reset': hideOverlay(); S.found.clear(); S.presses = 0; S.rot = {}; markKeys(); updateStats(); break;
     }
   }
 
   /* ---------- syöte ---------- */
   function input(ch, origin) {
     audio();
+    if (S.naming) { flashKey(ch); nameKey(ch); return; }
     if (!overlay.hidden) {
-      if (S.mode === 'free' && performance.now() >= S.overlayLock) hideOverlay();
+      if (S.overlayKind === 'celebrate' && performance.now() >= S.overlayLock) hideOverlay();
       else return;
     }
     flashKey(ch);
     if (S.mode === 'free') doFree(ch, origin);
     else if (S.mode === 'find') doFind(ch);
-    else doWords(ch);
+    else if (S.mode === 'words') doWords(ch);
+    else doSnow(ch);
+  }
+  function specialKey(k) {
+    audio();
+    if (S.naming) { if (k === 'BACK') nameBack(); else if (k === 'OK') nameOk(); else nameKey(k); return; }
+    if (k === ' ' && S.mode === 'words' && S.w.running) { flashKey(' '); doWords(' '); }
   }
   function spaceOrEnter() {
     audio();
+    if (S.naming) return;
     if (!overlay.hidden) {
       if (performance.now() < S.overlayLock) return;
-      if (S.mode === 'words' && !S.w.running) startRound(); else hideOverlay();
+      const k = S.overlayKind;
+      if (k === 'start' || k === 'results') startRound();
+      else if (k === 'snow-start' || k === 'snow-results') snowStart();
+      else { hideOverlay(); restoreCard(); }
       return;
     }
     if (S.mode === 'free') doFree(rand(ALPHA));
-    else if (S.mode === 'words' && !S.w.running) startRound();
   }
-  const CODE_FALLBACK = { Semicolon: 'Ö', Quote: 'Ä', BracketLeft: 'Å' }; // suomalaiset näppäinpaikat muulla asettelulla
+  const CODE_FALLBACK = { Semicolon: 'Ö', Quote: 'Ä', BracketLeft: 'Å' };
   function keyToChar(e) {
-    if (e.ctrlKey || e.metaKey || e.altKey) return null;
     const k = e.key;
-    if (k && k.length === 1) {
-      const u = up(k);
-      if (ALPHA.includes(u)) return u;
-      if (isDigit(k)) return k;
-    }
+    if (k && k.length === 1) { const u = up(k); if (ALPHA.includes(u)) return u; if (isDigit(k)) return k; }
     if (e.code && CODE_FALLBACK[e.code]) return CODE_FALLBACK[e.code];
     if (e.code && /^Digit[0-9]$/.test(e.code)) return e.code.slice(5);
     return null;
   }
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Tab' || e.key === 'Escape') return;
-    const onControl = e.target && e.target.closest && e.target.closest('button');
+    if (e.key === 'Tab' || e.ctrlKey || e.metaKey || e.altKey) return;
+    const onBtn = e.target && e.target.closest && e.target.closest('button');
+    if (e.key === 'Escape') { if (S.overlayKind === 'badges' || S.overlayKind === 'celebrate') { hideOverlay(); restoreCard(); } return; }
+    if (S.naming) {
+      if (e.key === 'Backspace') { e.preventDefault(); nameBack(); return; }
+      if (e.key === 'Enter') { if (onBtn) return; e.preventDefault(); nameOk(); return; }
+      if (e.key === ' ' || e.key === '-') { if (onBtn && e.key === ' ') return; e.preventDefault(); if (!e.repeat) { audio(); nameKey(e.key); } return; }
+    }
     if (e.key === ' ' || e.key === 'Enter') {
-      if (onControl) return; // anna painikkeiden toimia näppäimistöllä
+      if (onBtn) return;
       e.preventDefault();
-      if (!e.repeat) spaceOrEnter();
+      if (e.repeat) return;
+      if (e.key === ' ' && S.mode === 'words' && S.w.running) { input(' '); return; }
+      spaceOrEnter();
       return;
     }
-    const ch = keyToChar(e);
-    if (!ch) return;
+    if (e.key === 'Backspace') { e.preventDefault(); return; }
+    const ch = keyToChar(e); if (!ch) return;
     e.preventDefault();
-    if (e.repeat) return; // pohjassa pidetty nappi ei tulvi ruutua
+    if (e.repeat) return;
     input(ch);
   });
   stage.addEventListener('pointerdown', (e) => {
-    if (S.mode !== 'free' || e.target.closest('.overlay')) return;
+    if (S.mode !== 'free' || S.naming || e.target.closest('.overlay')) return;
     const s = stage.getBoundingClientRect();
     input(rand(ALPHA), { x: e.clientX - s.left, y: e.clientY - s.top });
   });
-  document.addEventListener('click', (e) => { // hiirellä painettu nappi ei jää välilyönnin kohteeksi
-    const b = e.target.closest && e.target.closest('button');
-    if (b && e.detail > 0) b.blur();
-  });
-
-  /* ---------- fokusvihje (upotettuna sivu ei saa näppäimiä ennen klikkausta) ---------- */
+  document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('button'); if (b && e.detail > 0) b.blur(); });
   function focusState() { document.body.classList.toggle('nofocus', !document.hasFocus()); }
   window.addEventListener('focus', focusState); window.addEventListener('blur', focusState);
-  focusState();
 
   /* ---------- työkalut ---------- */
-  function syncTools() {
-    caseLbl.textContent = S.upper ? 'ABC' : 'abc';
-    btnSound.setAttribute('aria-pressed', String(S.sound));
-    btnSpeech.setAttribute('aria-pressed', String(S.speech));
-  }
-  btnCase.addEventListener('click', () => {
+  function syncTools() { btnSound.setAttribute('aria-pressed', String(S.sound)); btnSpeech.setAttribute('aria-pressed', String(S.speech)); }
+  function toggleCase() {
     S.upper = !S.upper; store.set('upper', S.upper);
-    syncTools(); keyLabels(); renderView();
+    keyLabels(); renderView();
     if (S.mode === 'words' && S.w.cur) renderTiles();
-  });
-  btnSound.addEventListener('click', () => { S.sound = !S.sound; store.set('sound', S.sound); syncTools(); if (S.sound) sfx.good(); });
+    if (S.mode === 'snow' && !S.s.running) drawSnow(previewFlakes());
+    if (S.naming) renderNameBox();
+  }
+  btnSound.addEventListener('click', () => { S.sound = !S.sound; store.set('sound', S.sound); syncTools(); if (S.sound) sfx.good(); else hissStop(); });
   btnSpeech.addEventListener('click', () => { S.speech = !S.speech; store.set('speech', S.speech); syncTools(); if (S.speech) say('Hei! Paina kirjainta.'); });
+  btnPlayer.addEventListener('click', () => { if (!S.naming) openName(); });
+  btnBadges.addEventListener('click', openBadges);
   if (!document.fullscreenEnabled) btnFull.hidden = true;
   btnFull.addEventListener('click', () => {
-    try {
-      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-      else root.requestFullscreen().catch(() => {});
-    } catch (e) {}
+    try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else root.requestFullscreen().catch(() => {}); } catch (e) {}
   });
+  const themeChange = () => { snowColors(); if (S.mode === 'snow' && !S.s.running) drawSnow(previewFlakes()); };
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', themeChange); } catch (e) {}
+  try { new MutationObserver(themeChange).observe(root, { attributes: true, attributeFilter: ['data-theme'] }); } catch (e) {}
 
   /* ---------- tilat ---------- */
-  function setMode(m) {
+  function stopEverything() {
     if (S.w.running) stopRound();
-    clearTimeout(S.f.hintT); clearHints(); hideOverlay();
-    S.mode = m; store.set('mode', m);
+    if (S.s.running) snowStop();
+    cancelDynamite(); clearTimeout(S.f.hintT); clearHints();
+  }
+  function setMode(m) {
+    stopEverything(); hideOverlay();
+    S.mode = m; store.set('mode', m); document.body.dataset.mode = m;
     tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.mode === m)));
-    digitRow.hidden = m !== 'free';
-    markKeys(); renderStats();
+    letterView.hidden = !(m === 'free' || m === 'find');
+    wordView.hidden = m !== 'words';
+    snowCv.hidden = m !== 'snow';
+    markKeys(); renderStats(); specialKeys();
     if (m === 'free') {
       prompt.textContent = 'Paina mitä tahansa kirjainta tai numeroa';
-      letterView.hidden = false; wordView.hidden = true;
       if (!S.freeView) S.freeView = { kind: 'letter', ch: 'A', pick: pickFor('A') };
       S.view = S.freeView; renderView(); pop(block);
     } else if (m === 'find') {
       prompt.textContent = 'Etsi tämä kirjain näppäimistöltä';
-      letterView.hidden = false; wordView.hidden = true;
-      S.f.target = null; S.f.streak = 0; newTarget(); updateStats();
+      S.f.target = null; S.f.streak = 0;
+      if (S.p) newTarget(); else { S.view = { kind: 'letter', ch: 'K', pick: PICS.K[0] }; renderView(); }
+      updateStats();
+    } else if (m === 'words') {
+      if (S.p) S.w.level = Math.min(Math.max(1, S.w.level), S.p.level);
+      setWordsPrompt(); specialKeys();
+      if (!S.w.cur) previewWord(); else { S.w.pos = 0; renderTiles(); }
+      requestAnimationFrame(setupRace);
+      if (S.p) startCard();
     } else {
-      prompt.textContent = 'Kirjoita kuvan sana';
-      letterView.hidden = true; wordView.hidden = false;
-      if (!S.w.cur) { S.w.list = shuffle(WORDS.slice()); S.w.cur = S.w.list.pop(); }
-      S.w.pos = 0; renderTiles(); startCard();
+      prompt.textContent = 'Paina kirjainta ennen kuin hiutale osuu maahan';
+      snowColors(); drawSnow(previewFlakes());
+      if (S.p) snowStartCard();
     }
   }
-  tabs.forEach((t) => t.addEventListener('click', () => { if (t.dataset.mode !== S.mode) setMode(t.dataset.mode); }));
+  tabs.forEach((t) => t.addEventListener('click', () => { if (S.naming) return; if (t.dataset.mode !== S.mode) setMode(t.dataset.mode); }));
 
-  syncTools(); keyLabels();
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(stage); else window.addEventListener('resize', resize);
+  resize(); focusState(); syncTools(); keyLabels(); syncPlayer();
   const saved = store.get('mode', 'free');
-  setMode(['free', 'find', 'words'].includes(saved) ? saved : 'free');
+  setMode(['free', 'find', 'words', 'snow'].includes(saved) ? saved : 'free');
+  openName();
 })();
 </script>
 </body>
