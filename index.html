@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Näppäinaapinen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@500;600;700;800&display=swap">
+<style>
+/* Layout: one-screen toy. Top bar (name · modes · toggles), stat chips, a stage where a wooden ABC block pops in under a confetti canvas, and the Finnish keyboard mirrored at the bottom. Day sky in light theme, aurora night in dark. */
+:root{
+  --bg:#D3E7F5;
+  --glow-a:#F6FBFF;
+  --glow-b:#FFEFC2;
+  --surface:#FAFDFF;
+  --surface-2:#E2EEF8;
+  --ink:#14243C;
+  --muted:#485C79;
+  --line:#A8C1D7;
+  --shadow:rgba(20,36,60,.20);
+  --rim:rgba(255,255,255,.30);
+  --t1:#DE4336; --t2:#F2AE1C; --t3:#2F9C52; --t4:#2A6ECB; --t5:#8253CF; --t6:#E97325;
+  --on-toy:#FFFFFF;
+  --on-yellow:#2A1B00;
+  --ok:#2C9850;
+  --warn:#D4433A;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --letter:"Andika","Verdana",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C172E; --glow-a:#14504B; --glow-b:#33265E; --surface:#16264A; --surface-2:#0F1E3A;
+    --ink:#E9F1FF; --muted:#9CB0D2; --line:#2C4372; --shadow:rgba(0,0,0,.45); --rim:rgba(255,255,255,.20);
+    --t1:#FF6555; --t2:#FFC63C; --t3:#4CC473; --t4:#5A99F2; --t5:#A67FF3; --t6:#FF9349;
+    --on-toy:#0C172E; --on-yellow:#2A1B00; --ok:#47C06C; --warn:#FF6B5D;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C172E; --glow-a:#14504B; --glow-b:#33265E; --surface:#16264A; --surface-2:#0F1E3A;
+  --ink:#E9F1FF; --muted:#9CB0D2; --line:#2C4372; --shadow:rgba(0,0,0,.45); --rim:rgba(255,255,255,.20);
+  --t1:#FF6555; --t2:#FFC63C; --t3:#4CC473; --t4:#5A99F2; --t5:#A67FF3; --t6:#FF9349;
+  --on-toy:#0C172E; --on-yellow:#2A1B00; --ok:#47C06C; --warn:#FF6B5D;
+  color-scheme:dark;
+}
+
+[hidden]{display:none!important}
+html{height:100%;box-sizing:border-box}
+*,*::before,*::after{box-sizing:inherit}
+body{
+  height:100%;margin:0;overflow:hidden;
+  background:
+    radial-gradient(120% 55% at 28% -14%, var(--glow-a), transparent 62%),
+    radial-gradient(70% 45% at 94% -8%, var(--glow-b), transparent 60%),
+    var(--bg);
+  color:var(--ink);
+  font-family:var(--display);
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  -webkit-user-select:none;user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+:focus-visible{outline:3px solid var(--t4);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.app{height:100%;display:flex;flex-direction:column;max-width:1100px;margin-inline:auto}
+
+/* top bar */
+.bar{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px 16px;padding-block:10px 4px}
+.brand{display:flex;align-items:center;gap:8px;min-width:0}
+.brand .logo{font-size:28px;line-height:1}
+.brand h1{margin:0;font:800 clamp(20px,2.6vw,28px)/1 var(--display);letter-spacing:-.01em;white-space:nowrap}
+.brand h1 span{color:var(--t1)}
+.modes{justify-self:center;display:flex;gap:2px;padding:4px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line)}
+.modes button{border:0;background:transparent;color:var(--muted);font:700 15px/1 var(--display);padding:9px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.modes button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 2px 0 var(--line)}
+.tools{display:flex;gap:6px;justify-content:flex-end}
+.tool{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 14px/1 var(--display);padding:7px 10px;border-radius:999px;cursor:pointer;min-height:36px}
+.tool[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tool svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.tool .case{font:800 15px/1 var(--letter);letter-spacing:.02em}
+
+/* stats */
+.stats{display:flex;flex-wrap:wrap;justify-content:center;align-items:stretch;gap:8px;padding-block:6px}
+.chip{display:flex;flex-direction:column;justify-content:center;min-width:72px;padding:4px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.chip .k{font:700 11px/1.3 var(--display);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.chip .v{font:800 22px/1.15 var(--display);font-variant-numeric:tabular-nums}
+.chip.wide{min-width:150px}
+.chip.low .v{color:var(--warn)}
+.meter{display:block;height:6px;margin-top:3px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.meter i{display:block;height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,var(--t1),var(--t6),var(--t2),var(--t3),var(--t4),var(--t5));transition:width .3s}
+.btn{border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px/1 var(--display);padding:10px 16px;border-radius:999px;cursor:pointer}
+.btn.small{align-self:center;font-size:14px;padding:8px 12px}
+
+/* stage */
+.stage{position:relative;flex:1 1 auto;min-height:0;container-type:size}
+#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
+.center{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(6px,3cqh,18px);text-align:center}
+.prompt{margin:0;font:700 clamp(15px,4.5cqh,24px)/1.2 var(--display);color:var(--muted);text-wrap:balance;max-width:92%}
+.focus-pill{display:none;font:700 14px/1 var(--display);background:var(--t2);color:var(--on-yellow);padding:7px 12px;border-radius:999px}
+body.nofocus .focus-pill{display:inline-block}
+
+.lv{display:flex;flex-direction:column;align-items:center;gap:clamp(8px,3cqh,20px)}
+.block{
+  --c:var(--t4);--oc:var(--on-toy);
+  --size:clamp(104px, min(34vh, 60vw), 260px);
+  --size:clamp(96px, 50cqmin, 270px);
+  position:relative;width:var(--size);height:var(--size);max-width:100%;
+  display:grid;place-items:center;border-radius:20%;
+  background:var(--c);color:var(--oc);
+  box-shadow:
+    inset 0 0 0 calc(var(--size) * .05) var(--rim),
+    0 calc(var(--size) * .06) 0 color-mix(in srgb, var(--c) 60%, #000),
+    0 calc(var(--size) * .1) calc(var(--size) * .2) var(--shadow);
+  transform:rotate(var(--r,0deg));
+}
+.block .up{font:700 calc(var(--size) * .6)/1 var(--letter);transform:translateY(-3%)}
+.block .low{position:absolute;right:13%;bottom:8%;font:700 calc(var(--size) * .2)/1 var(--letter);opacity:.85}
+.word{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.15em .4em;max-width:94cqw;min-height:1.3em;font:700 clamp(22px,8cqh,48px)/1.1 var(--letter)}
+.word .em{font-size:1.2em;line-height:1}
+.word .em.count{flex-basis:100%;font-size:.85em;letter-spacing:.04em}
+.word b{color:color-mix(in srgb, var(--c) 78%, var(--ink))}
+.word .note{font:600 .62em/1.2 var(--display);color:var(--muted)}
+
+.wv{display:flex;flex-direction:column;align-items:center;gap:clamp(8px,3cqh,22px);max-width:100%}
+.wemoji{font-size:clamp(52px,26cqh,140px);line-height:1;transform:rotate(var(--r,0deg))}
+.tiles{--n:6;display:flex;gap:6px;justify-content:center;max-width:100%}
+.tile{
+  --tw:clamp(22px, min(calc((100cqw - 24px) / var(--n) - 6px), 15cqh), 62px);
+  width:var(--tw);height:calc(var(--tw) * 1.12);display:grid;place-items:center;
+  border-radius:22%;background:var(--surface);border:2px solid var(--line);box-shadow:0 3px 0 var(--line);
+  font:700 calc(var(--tw) * .6)/1 var(--letter);color:var(--ink);
+  transition:transform .12s, background-color .12s;
+}
+.tile.cur{border-color:var(--t4);box-shadow:0 5px 0 var(--t4);transform:translateY(-5px)}
+.tile.done{background:var(--ok);color:var(--on-toy);border-color:transparent;box-shadow:0 3px 0 color-mix(in srgb, var(--ok) 60%, #000)}
+
+.pop{animation:pop .42s cubic-bezier(.25,1.7,.45,1) both}
+@keyframes pop{from{transform:scale(.45) rotate(calc(var(--r,0deg) * -3))}to{transform:scale(1) rotate(var(--r,0deg))}}
+.shake{animation:shake .36s ease-in-out}
+@keyframes shake{
+  0%,100%{transform:translateX(0) rotate(var(--r,0deg))}
+  20%{transform:translateX(-12px) rotate(var(--r,0deg))}
+  40%{transform:translateX(11px) rotate(var(--r,0deg))}
+  60%{transform:translateX(-7px) rotate(var(--r,0deg))}
+  80%{transform:translateX(5px) rotate(var(--r,0deg))}
+}
+
+/* overlay */
+.overlay{position:absolute;inset:0;z-index:3;display:grid;place-items:center;padding:12px;background:color-mix(in srgb, var(--bg) 72%, transparent);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.card{width:min(440px,100%);max-height:100%;overflow:auto;padding:22px 22px 18px;border-radius:22px;background:var(--surface);border:2px solid var(--line);box-shadow:0 14px 34px var(--shadow);text-align:center}
+.card .mascot{font-size:56px;line-height:1;margin-bottom:4px}
+.card h2{margin:0 0 6px;font:800 clamp(24px,4vw,32px)/1.1 var(--display);text-wrap:balance}
+.card p{margin:0 0 14px;font:500 17px/1.4 var(--display);color:var(--muted);text-wrap:pretty}
+.card p strong{color:var(--ink)}
+.card .fine{margin:10px 0 0;font-size:14px}
+.res{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:4px 0 14px}
+.res .chip{min-width:90px}
+.acts{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.big{border:0;cursor:pointer;font:800 20px/1 var(--display);padding:14px 26px;border-radius:999px;background:var(--t3);color:var(--on-toy);box-shadow:0 4px 0 color-mix(in srgb, var(--t3) 58%, #000)}
+.big:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb, var(--t3) 58%, #000)}
+
+/* keyboard */
+.kb{display:flex;flex-direction:column;gap:6px;padding-block:8px 12px;width:100%}
+.row{display:flex;justify-content:center;gap:5px}
+.key{
+  --c:var(--surface);--oc:var(--ink);
+  flex:0 0 auto;width:min(64px, calc((100% - 50px) / 11));
+  height:clamp(34px,6.2vh,56px);padding:0;
+  border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  box-shadow:0 3px 0 var(--line);
+  font:700 clamp(14px,2.4vh,22px)/1 var(--letter);
+  cursor:pointer;touch-action:manipulation;transition:transform .08s, box-shadow .08s;
+}
+.row.digits .key{font-family:var(--display);font-weight:800}
+.key.found{background:var(--c);color:var(--oc);border-color:transparent;box-shadow:0 3px 0 color-mix(in srgb, var(--c) 60%, #000)}
+.key.hint{background:var(--t2);color:var(--on-yellow);border-color:transparent;animation:glow 1s ease-in-out infinite}
+.key.down{transform:translateY(3px);box-shadow:0 0 0 var(--line)}
+@keyframes glow{
+  0%,100%{box-shadow:0 3px 0 color-mix(in srgb, var(--t2) 60%, #000), 0 0 0 0 color-mix(in srgb, var(--t2) 60%, transparent)}
+  50%{box-shadow:0 3px 0 color-mix(in srgb, var(--t2) 60%, #000), 0 0 0 7px color-mix(in srgb, var(--t2) 45%, transparent)}
+}
+
+@media (max-width:780px){
+  .bar{grid-template-columns:1fr auto}
+  .modes{grid-column:1 / -1;grid-row:2;justify-self:stretch}
+  .modes button{flex:1 1 0;padding:9px 6px;font-size:14px}
+}
+@media (max-width:560px){
+  .tool .lbl{display:none}
+  .tool{padding:7px 9px}
+  .brand .logo{font-size:24px}
+  .chip{min-width:64px;padding:3px 9px}
+  .chip .v{font-size:19px}
+  .chip.wide{min-width:120px}
+  .row{gap:4px}
+  .key{width:min(64px, calc((100% - 40px) / 11));border-radius:8px}
+}
+@media (prefers-reduced-motion: reduce){
+  .pop,.shake{animation:none}
+  .key.hint{animation:none;box-shadow:0 0 0 4px color-mix(in srgb, var(--t2) 55%, transparent)}
+  .tile,.key,.meter i{transition:none}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="bar">
+    <div class="brand"><span class="logo" aria-hidden="true">🐓</span><h1>Näppäin<span>aapinen</span></h1></div>
+    <nav class="modes" role="tablist" aria-label="Pelitila">
+      <button type="button" role="tab" data-mode="free" aria-selected="true">Vapaa leikki</button>
+      <button type="button" role="tab" data-mode="find" aria-selected="false">Etsi kirjain</button>
+      <button type="button" role="tab" data-mode="words" aria-selected="false">Kirjoita sana</button>
+    </nav>
+    <div class="tools">
+      <button type="button" class="tool" id="btnCase" aria-label="Isot tai pienet kirjaimet"><span class="case" id="caseLbl">ABC</span></button>
+      <button type="button" class="tool" id="btnSound" aria-pressed="true" aria-label="Äänet">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg><span class="lbl">Ääni</span>
+      </button>
+      <button type="button" class="tool" id="btnSpeech" aria-pressed="false" aria-label="Puhe" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H10l-5 4v-4H4z"/><path d="M8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01"/></svg><span class="lbl">Puhe</span>
+      </button>
+      <button type="button" class="tool" id="btnFull" aria-label="Koko näyttö">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span class="lbl">Koko näyttö</span>
+      </button>
+    </div>
+  </header>
+
+  <section class="stats" id="stats" aria-label="Laskuri"></section>
+
+  <main class="stage" id="stage">
+    <canvas id="fx" aria-hidden="true"></canvas>
+    <div class="center">
+      <p class="prompt" id="prompt">Paina mitä tahansa kirjainta tai numeroa</p>
+      <span class="focus-pill">Napsauta ruutua, niin näppäimet toimivat</span>
+      <div class="lv" id="letterView">
+        <div class="block" id="block"><span class="up" id="bUp">A</span><span class="low" id="bLow">a</span></div>
+        <div class="word" id="word"><span class="em">🚗</span><span class="w"><b>A</b>UTO</span></div>
+      </div>
+      <div class="wv" id="wordView" hidden>
+        <div class="wemoji" id="wEmoji">🐱</div>
+        <div class="tiles" id="tiles"></div>
+      </div>
+    </div>
+    <div class="overlay" id="overlay" hidden><div class="card" id="card" role="dialog" aria-live="polite"></div></div>
+  </main>
+
+  <div class="kb" id="kb" aria-label="Näppäimistö"></div>
+  <div class="sr" id="live" aria-live="polite"></div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (s) => document.querySelector(s);
+  const root = document.documentElement;
+  const reduced = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  /* ---------- sisältö ---------- */
+  const ALPHA = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ'];
+  const RARE = new Set(['Q', 'W', 'X', 'Z', 'Å']);
+  const PICS = {
+    A: [['auto', '🚗'], ['ananas', '🍍'], ['apina', '🐒']],
+    B: [['banaani', '🍌'], ['bussi', '🚌']],
+    C: [['cello', '🎻']],
+    D: [['dinosaurus', '🦕'], ['delfiini', '🐬']],
+    E: [['elefantti', '🐘'], ['etana', '🐌']],
+    F: [['flamingo', '🦩']],
+    G: [['gorilla', '🦍']],
+    H: [['hevonen', '🐴'], ['hiiri', '🐭'], ['hai', '🦈']],
+    I: [['ilmapallo', '🎈']],
+    J: [['jäätelö', '🍦'], ['juna', '🚆'], ['jänis', '🐰']],
+    K: [['kissa', '🐱'], ['koira', '🐶'], ['kettu', '🦊'], ['kakku', '🎂']],
+    L: [['lentokone', '✈️'], ['lumiukko', '☃️'], ['lammas', '🐑']],
+    M: [['mansikka', '🍓'], ['mehiläinen', '🐝'], ['muurahainen', '🐜']],
+    N: [['nalle', '🧸'], ['nenä', '👃']],
+    O: [['omena', '🍎'], ['orava', '🐿️'], ['ovi', '🚪']],
+    P: [['pallo', '⚽'], ['pöllö', '🦉'], ['poro', '🦌'], ['pingviini', '🐧']],
+    R: [['rekka', '🚚'], ['raketti', '🚀'], ['rapu', '🦀']],
+    S: [['sieni', '🍄'], ['siili', '🦔'], ['sammakko', '🐸']],
+    T: [['traktori', '🚜'], ['tähti', '⭐'], ['tiikeri', '🐯']],
+    U: [['ufo', '🛸'], ['ukkonen', '⛈️']],
+    V: [['vene', '⛵'], ['vesimeloni', '🍉'], ['valas', '🐋']],
+    Y: [['yksisarvinen', '🦄'], ['yö', '🌙']],
+    'Ä': [['ämpäri', '🪣']],
+    'Ö': [['ötökkä', '🐞']]
+  };
+  const NAMES = {
+    A: 'aa', B: 'bee', C: 'see', D: 'dee', E: 'ee', F: 'äf', G: 'gee', H: 'hoo', I: 'ii', J: 'jii',
+    K: 'koo', L: 'äl', M: 'äm', N: 'än', O: 'oo', P: 'pee', Q: 'kuu', R: 'är', S: 'äs', T: 'tee',
+    U: 'uu', V: 'vee', W: 'kaksois-vee', X: 'äks', Y: 'yy', Z: 'tseta', 'Å': 'ruotsalainen oo', 'Ä': 'ää', 'Ö': 'öö'
+  };
+  const NUMS = ['nolla', 'yksi', 'kaksi', 'kolme', 'neljä', 'viisi', 'kuusi', 'seitsemän', 'kahdeksan', 'yhdeksän'];
+  const COUNT = ['🍎', '🍓', '⭐', '🎈', '🐞', '🌸', '🚗', '🧸', '🐟', '🍪'];
+  const WORDS = [
+    ['kissa', '🐱'], ['koira', '🐶'], ['auto', '🚗'], ['omena', '🍎'], ['pallo', '⚽'], ['kuu', '🌙'],
+    ['aurinko', '☀️'], ['lumi', '❄️'], ['kala', '🐟'], ['hevonen', '🐴'], ['poro', '🦌'], ['joulu', '🎄'],
+    ['lahja', '🎁'], ['kirja', '📖'], ['kynä', '✏️'], ['koulu', '🏫'], ['talo', '🏠'], ['puu', '🌳'],
+    ['kukka', '🌸'], ['sieni', '🍄'], ['mansikka', '🍓'], ['banaani', '🍌'], ['jäätelö', '🍦'], ['pizza', '🍕'],
+    ['leipä', '🍞'], ['maito', '🥛'], ['juusto', '🧀'], ['juna', '🚆'], ['laiva', '🚢'], ['pyörä', '🚲'],
+    ['traktori', '🚜'], ['raketti', '🚀'], ['tähti', '⭐'], ['sateenkaari', '🌈'], ['pilvi', '☁️'], ['karhu', '🐻'],
+    ['kettu', '🦊'], ['pöllö', '🦉'], ['jänis', '🐰'], ['orava', '🐿️'], ['siili', '🦔'], ['pingviini', '🐧'],
+    ['lumiukko', '☃️'], ['sukset', '🎿'], ['kitara', '🎸'], ['rumpu', '🥁'], ['saapas', '👢'], ['sakset', '✂️'],
+    ['kello', '⏰'], ['avain', '🔑'], ['lamppu', '💡'], ['sydän', '❤️'], ['kakku', '🎂'], ['sauna', '🧖'],
+    ['mehiläinen', '🐝'], ['sammakko', '🐸'], ['tiikeri', '🐯'], ['vene', '⛵'], ['valas', '🐋'], ['kuusi', '🌲'],
+    ['reppu', '🎒'], ['hanskat', '🧤']
+  ];
+  const ROUND_MS = 60000;
+
+  /* ---------- tallennus (vain tällä laitteella) ---------- */
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem('naa.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem('naa.' + k, JSON.stringify(v)); } catch (e) {} }
+  };
+
+  const S = {
+    mode: 'free',
+    upper: store.get('upper', true),
+    sound: store.get('sound', true),
+    speech: store.get('speech', false),
+    found: new Set(), presses: 0, rot: {}, view: null, freeView: null,
+    f: { target: null, hits: 0, streak: 0, best: store.get('bestStreak', 0), misses: 0, locked: false, hintT: 0, em: '✨' },
+    w: { running: false, endAt: 0, list: [], cur: null, pos: 0, words: 0, letters: 0, wrong: 0, wait: false, timer: 0, best: store.get('bestRound', null) },
+    overlayLock: 0
+  };
+
+  /* ---------- elementit ---------- */
+  const stage = $('#stage'), letterView = $('#letterView'), block = $('#block'), bUp = $('#bUp'), bLow = $('#bLow');
+  const wordEl = $('#word'), prompt = $('#prompt'), stats = $('#stats'), kb = $('#kb');
+  const overlay = $('#overlay'), card = $('#card'), live = $('#live');
+  const wordView = $('#wordView'), wEmoji = $('#wEmoji'), tiles = $('#tiles');
+  const btnCase = $('#btnCase'), caseLbl = $('#caseLbl'), btnSound = $('#btnSound'), btnSpeech = $('#btnSpeech'), btnFull = $('#btnFull');
+  const tabs = [...document.querySelectorAll('.modes button')];
+
+  const up = (s) => s.toLocaleUpperCase('fi');
+  const low = (s) => s.toLocaleLowerCase('fi');
+  const cased = (s) => S.upper ? up(s) : low(s);
+  const rand = (a) => a[Math.floor(Math.random() * a.length)];
+  const isDigit = (c) => /^[0-9]$/.test(c);
+  function colorIdx(ch) { const i = ALPHA.indexOf(ch); return ((i >= 0 ? i : Number(ch)) % 6) + 1; }
+  function paint(el, ch) {
+    const n = colorIdx(ch);
+    el.style.setProperty('--c', `var(--t${n})`);
+    el.style.setProperty('--oc', n === 2 ? 'var(--on-yellow)' : 'var(--on-toy)');
+  }
+
+  /* ---------- äänet (yksi jaettu AudioContext) ---------- */
+  let ac = null, master = null;
+  function audio() {
+    if (!S.sound) return null;
+    try {
+      if (!ac) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        ac = new AC(); master = ac.createGain(); master.gain.value = 0.45; master.connect(ac.destination);
+      }
+      if (ac.state === 'suspended') ac.resume();
+    } catch (e) { return null; }
+    return ac;
+  }
+  function tone(f, t0, dur, o = {}) {
+    const a = audio(); if (!a) return;
+    const { type = 'triangle', vol = 0.25, to = null } = o;
+    const t = a.currentTime + t0;
+    const osc = a.createOscillator(), g = a.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(f, t);
+    if (to) osc.frequency.exponentialRampToValueAtTime(to, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(g); g.connect(master); osc.start(t); osc.stop(t + dur + 0.03);
+  }
+  const PENTA = [0, 2, 4, 7, 9];
+  const noteOf = (i) => 261.63 * Math.pow(2, (PENTA[i % 5] + 12 * (Math.floor(i / 5) % 3)) / 12);
+  const sfx = {
+    letter(ch) { const f = noteOf(Math.max(0, ALPHA.indexOf(ch))); tone(f, 0, 0.22, { vol: 0.26 }); tone(f * 2, 0, 0.09, { type: 'sine', vol: 0.07 }); },
+    digit(d) { const f = noteOf(Number(d) + 3); tone(f, 0, 0.2, { type: 'square', vol: 0.06 }); tone(f, 0, 0.24, { vol: 0.2 }); },
+    good() { tone(659, 0, 0.12, { vol: 0.22 }); tone(988, 0.08, 0.22, { vol: 0.22 }); },
+    bad() { tone(220, 0, 0.22, { type: 'sine', vol: 0.2, to: 150 }); },
+    word() { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.07, 0.22, { vol: 0.2 })); },
+    fanfare() { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i * 0.11, i === 5 ? 0.55 : 0.18, { vol: 0.22 })); }
+  };
+
+  /* ---------- puhe (vain jos laitteessa on suomenkielinen ääni) ---------- */
+  const synth = window.speechSynthesis || null;
+  let fiVoice = null;
+  function findVoice() {
+    try { fiVoice = synth ? (synth.getVoices().find((v) => /^fi/i.test(v.lang)) || null) : null; } catch (e) { fiVoice = null; }
+    btnSpeech.hidden = !fiVoice;
+  }
+  if (synth) {
+    findVoice();
+    try { synth.addEventListener('voiceschanged', findVoice); } catch (e) { synth.onvoiceschanged = findVoice; }
+  }
+  function say(text) {
+    if (!S.speech || !fiVoice) return;
+    try {
+      synth.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.voice = fiVoice; u.lang = fiVoice.lang; u.rate = 0.9; u.pitch = 1.1;
+      synth.speak(u);
+    } catch (e) {}
+  }
+
+  /* ---------- hiukkaset ---------- */
+  const cv = $('#fx'), cx = cv.getContext('2d');
+  let W = 0, H = 0, parts = [], raf = 0, last = 0;
+  function resize() {
+    const r = stage.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = r.width; H = r.height;
+    cv.width = Math.max(1, Math.round(W * dpr)); cv.height = Math.max(1, Math.round(H * dpr));
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(stage); else window.addEventListener('resize', resize);
+  resize();
+  function palette() {
+    const cs = getComputedStyle(root);
+    return ['--t1', '--t2', '--t3', '--t4', '--t5', '--t6'].map((v) => cs.getPropertyValue(v).trim() || '#888');
+  }
+  function burst(x, y, o = {}) {
+    const { count = 40, emoji = null, power = 1 } = o;
+    const pal = palette(), n = reduced ? Math.round(count / 3) : count;
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, s = (2 + Math.random() * 7) * power;
+      parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 2.5, g: 0.22, size: 5 + Math.random() * 9,
+        rot: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4, life: 0, max: 45 + Math.random() * 50, color: pal[i % pal.length], shape: i % 3 });
+    }
+    if (emoji && !reduced) {
+      for (let j = 0; j < 3; j++) {
+        parts.push({ x, y, vx: (Math.random() - 0.5) * 11, vy: -6 - Math.random() * 6, g: 0.24, size: 30 + Math.random() * 26,
+          rot: 0, vr: (Math.random() - 0.5) * 0.12, life: 0, max: 85, emoji });
+      }
+    }
+    if (parts.length > 600) parts.splice(0, parts.length - 600);
+    if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
+  }
+  function step(now) {
+    const dt = Math.min(3, (now - last) / 16.67); last = now;
+    cx.clearRect(0, 0, W, H);
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i];
+      p.life += dt;
+      if (p.life > p.max || p.y > H + 80) { parts.splice(i, 1); continue; }
+      p.vx *= Math.pow(0.985, dt); p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
+      cx.globalAlpha = Math.max(0, 1 - Math.max(0, (p.life - p.max * 0.6) / (p.max * 0.4)));
+      cx.save(); cx.translate(p.x, p.y); cx.rotate(p.rot);
+      if (p.emoji) {
+        cx.font = `${p.size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+        cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText(p.emoji, 0, 0);
+      } else {
+        cx.fillStyle = p.color; const s = p.size;
+        if (p.shape === 0) { cx.beginPath(); cx.arc(0, 0, s / 2, 0, Math.PI * 2); cx.fill(); }
+        else if (p.shape === 1) { cx.fillRect(-s / 2, -s / 2, s, s); }
+        else { cx.beginPath(); cx.moveTo(0, -s / 2); cx.lineTo(s / 2, s / 2); cx.lineTo(-s / 2, s / 2); cx.closePath(); cx.fill(); }
+      }
+      cx.restore();
+    }
+    cx.globalAlpha = 1;
+    if (parts.length) raf = requestAnimationFrame(step); else { raf = 0; cx.clearRect(0, 0, W, H); }
+  }
+  function centerOf(el) {
+    const s = stage.getBoundingClientRect(), r = el.getBoundingClientRect();
+    return { x: r.left - s.left + r.width / 2, y: r.top - s.top + r.height / 2 };
+  }
+  function pop(el) {
+    if (!el) return;
+    el.classList.remove('pop', 'shake'); void el.offsetWidth;
+    el.style.setProperty('--r', (Math.random() * 10 - 5).toFixed(1) + 'deg');
+    el.classList.add('pop');
+  }
+  function shake(el) {
+    if (!el || reduced) return;
+    el.classList.remove('pop', 'shake'); void el.offsetWidth; el.classList.add('shake');
+  }
+
+  /* ---------- näppäimistö ruudulla ---------- */
+  const ROWS = [['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'Å'],
+    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ö', 'Ä'],
+    ['Z', 'X', 'C', 'V', 'B', 'N', 'M']];
+  const keyEls = {};
+  ROWS.forEach((r, i) => {
+    const row = document.createElement('div');
+    row.className = 'row' + (i === 0 ? ' digits' : '');
+    r.forEach((ch) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'key'; b.dataset.ch = ch;
+      b.setAttribute('aria-label', isDigit(ch) ? NUMS[Number(ch)] : 'kirjain ' + ch);
+      row.appendChild(b); keyEls[ch] = b;
+    });
+    kb.appendChild(row);
+  });
+  const digitRow = kb.querySelector('.digits');
+  function keyLabels() { for (const [ch, el] of Object.entries(keyEls)) el.textContent = isDigit(ch) ? ch : cased(ch); }
+  function markKeys() {
+    for (const [ch, el] of Object.entries(keyEls)) {
+      const on = S.mode === 'free' && S.found.has(ch);
+      el.classList.toggle('found', on);
+      if (on) paint(el, ch);
+    }
+  }
+  function flashKey(ch) { const el = keyEls[ch]; if (!el) return; el.classList.add('down'); setTimeout(() => el.classList.remove('down'), 120); }
+  function hintKey(ch) { clearHints(); const el = keyEls[ch]; if (el) el.classList.add('hint'); }
+  function clearHints() { kb.querySelectorAll('.hint').forEach((e) => e.classList.remove('hint')); }
+  kb.addEventListener('pointerdown', (e) => {
+    const b = e.target.closest('.key'); if (!b) return;
+    e.preventDefault(); input(b.dataset.ch);
+  });
+  kb.addEventListener('click', (e) => { // näppäimistökäyttäjät (Tab + Enter)
+    const b = e.target.closest('.key'); if (b && e.detail === 0) input(b.dataset.ch);
+  });
+
+  /* ---------- laskuri ---------- */
+  const chip = (id, k, v) => `<div class="chip" id="c-${id}"><span class="k">${k}</span><span class="v" id="v-${id}">${v}</span></div>`;
+  function renderStats() {
+    if (S.mode === 'free') {
+      stats.innerHTML = chip('presses', 'Painalluksia', 0) +
+        `<div class="chip wide"><span class="k">Löydetyt kirjaimet</span><span class="v" id="v-found">0 / ${ALPHA.length}</span><span class="meter"><i id="v-meter"></i></span></div>` +
+        `<button type="button" class="btn small" data-act="reset">Aloita alusta</button>`;
+    } else if (S.mode === 'find') {
+      stats.innerHTML = chip('hits', 'Osumat', 0) + chip('streak', 'Putki', 0) + chip('best', 'Paras putki', 0);
+    } else {
+      stats.innerHTML = chip('time', 'Aika', ROUND_MS / 1000) + chip('words', 'Sanat', 0) + chip('letters', 'Kirjaimet', 0) + chip('acc', 'Tarkkuus', '–');
+    }
+    updateStats();
+  }
+  const setV = (id, v) => { const e = document.getElementById('v-' + id); if (e) e.textContent = v; };
+  function accuracy() { const w = S.w, t = w.letters + w.wrong; return t ? Math.round((w.letters / t) * 100) : null; }
+  function updateStats() {
+    if (S.mode === 'free') {
+      setV('presses', S.presses); setV('found', `${S.found.size} / ${ALPHA.length}`);
+      const m = document.getElementById('v-meter'); if (m) m.style.width = (S.found.size / ALPHA.length * 100) + '%';
+    } else if (S.mode === 'find') {
+      setV('hits', S.f.hits); setV('streak', S.f.streak); setV('best', S.f.best);
+    } else {
+      setV('words', S.w.words); setV('letters', S.w.letters);
+      const a = accuracy(); setV('acc', a === null ? '–' : a + ' %');
+    }
+  }
+  stats.addEventListener('click', (e) => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act); });
+
+  /* ---------- näkymät ---------- */
+  function pickFor(ch) {
+    const list = PICS[ch]; if (!list) return null;
+    S.rot[ch] = ((S.rot[ch] ?? -1) + 1) % list.length;
+    return list[S.rot[ch]];
+  }
+  function renderLetter(ch, pick) {
+    paint(letterView, ch);
+    bUp.textContent = cased(ch);
+    bLow.textContent = S.upper ? low(ch) : up(ch); bLow.hidden = false;
+    if (pick) {
+      const [w, em] = pick;
+      wordEl.innerHTML = `<span class="em">${em}</span><span class="w"><b>${cased(w[0])}</b>${cased(w.slice(1))}</span>`;
+    } else if (ch === 'Å') {
+      wordEl.innerHTML = `<span class="em">✨</span><span class="note">ruotsalainen oo</span>`;
+    } else {
+      wordEl.innerHTML = `<span class="em">✨</span><span class="note">harvinainen kirjain</span>`;
+    }
+  }
+  function renderNumber(d, em) {
+    const n = Number(d);
+    paint(letterView, d);
+    bUp.textContent = d; bLow.hidden = true;
+    wordEl.innerHTML = `<span class="em count" aria-hidden="true">${em.repeat(n)}</span><span class="w">${cased(NUMS[n])}</span>`;
+  }
+  function renderView() {
+    const v = S.view; if (!v) return;
+    if (v.kind === 'digit') renderNumber(v.ch, v.em); else renderLetter(v.ch, v.pick);
+  }
+  function renderTiles() {
+    const [word, em] = S.w.cur, letters = [...word];
+    wEmoji.textContent = em;
+    tiles.style.setProperty('--n', Math.max(letters.length, 6));
+    tiles.innerHTML = letters.map((c, i) => `<span class="tile${i < S.w.pos ? ' done' : ''}${i === S.w.pos ? ' cur' : ''}">${cased(c)}</span>`).join('');
+  }
+
+  /* ---------- vapaa leikki ---------- */
+  function doFree(ch, origin) {
+    S.presses++;
+    let em;
+    if (isDigit(ch)) {
+      em = rand(COUNT);
+      S.view = { kind: 'digit', ch, em };
+      renderNumber(ch, em); sfx.digit(ch); say(NUMS[Number(ch)]);
+      live.textContent = NUMS[Number(ch)];
+    } else {
+      const pick = pickFor(ch);
+      S.view = { kind: 'letter', ch, pick };
+      renderLetter(ch, pick); sfx.letter(ch);
+      em = pick ? pick[1] : '✨';
+      say(NAMES[ch] + (pick ? ', ' + pick[0] : ''));
+      live.textContent = ch + (pick ? ' niin kuin ' + pick[0] : '');
+      if (!S.found.has(ch)) {
+        S.found.add(ch); markKeys();
+        if (S.found.size === ALPHA.length) setTimeout(celebrate, 600);
+      }
+    }
+    S.freeView = S.view;
+    pop(block);
+    const c = centerOf(block);
+    burst(c.x, c.y, { count: 46, emoji: em });
+    if (origin) burst(origin.x, origin.y, { count: 16, power: 0.7 });
+    updateStats();
+  }
+  function celebrate() {
+    sfx.fanfare();
+    [0, 250, 500].forEach((t) => setTimeout(() => burst(W * (0.2 + Math.random() * 0.6), H * (0.3 + Math.random() * 0.3), { count: 70, emoji: '⭐', power: 1.3 }), t));
+    showOverlay(`<div class="mascot" aria-hidden="true">🐓</div><h2>Koko aapinen löytyi!</h2>
+      <p>Löysit kaikki ${ALPHA.length} kirjainta. Aapiskukko on ylpeä sinusta.</p>
+      <div class="acts"><button type="button" class="big" data-act="reset">Kerää uudestaan</button><button type="button" class="btn" data-act="close">Jatka leikkiä</button></div>`, 1500);
+  }
+
+  /* ---------- etsi kirjain ---------- */
+  function newTarget() {
+    const f = S.f;
+    let t;
+    do {
+      t = rand(ALPHA);
+      if (RARE.has(t) && Math.random() < 0.6) t = f.target; // harvinaiset harvemmin
+    } while (t === f.target);
+    f.target = t; f.misses = 0; f.locked = false;
+    clearHints();
+    const pick = pickFor(t);
+    f.em = pick ? pick[1] : '✨';
+    S.view = { kind: 'letter', ch: t, pick };
+    renderLetter(t, pick); pop(block);
+    say('Etsi ' + NAMES[t]);
+    live.textContent = 'Etsi kirjain ' + t;
+    clearTimeout(f.hintT);
+    f.hintT = setTimeout(() => { if (S.mode === 'find' && f.target === t && !f.locked) hintKey(t); }, 6000);
+  }
+  function doFind(ch) {
+    const f = S.f;
+    if (f.locked || !f.target || isDigit(ch)) return;
+    if (ch === f.target) {
+      f.hits++; f.streak++;
+      if (f.streak > f.best) { f.best = f.streak; store.set('bestStreak', f.best); }
+      f.locked = true; clearTimeout(f.hintT); clearHints();
+      sfx.good();
+      const c = centerOf(block); burst(c.x, c.y, { count: 60, emoji: f.em, power: 1.1 });
+      live.textContent = 'Oikein!';
+      setTimeout(() => { if (S.mode === 'find') newTarget(); }, 650);
+    } else {
+      f.streak = 0; f.misses++;
+      sfx.bad(); shake(block);
+      if (f.misses >= 2) hintKey(f.target);
+    }
+    updateStats();
+  }
+
+  /* ---------- kirjoita sana ---------- */
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function nextWord() {
+    const w = S.w;
+    if (!w.list.length) w.list = shuffle(WORDS.slice());
+    w.cur = w.list.pop(); w.pos = 0; w.wait = false;
+    renderTiles(); pop(wEmoji); clearHints();
+    say(w.cur[0]);
+    live.textContent = 'Kirjoita ' + w.cur[0];
+  }
+  function startRound() {
+    const w = S.w;
+    Object.assign(w, { running: true, words: 0, letters: 0, wrong: 0 });
+    w.endAt = performance.now() + ROUND_MS;
+    hideOverlay(); nextWord();
+    clearInterval(w.timer); w.timer = setInterval(tickRound, 100);
+    setV('time', ROUND_MS / 1000);
+    const c = document.getElementById('c-time'); if (c) c.classList.remove('low');
+    updateStats();
+  }
+  function tickRound() {
+    const left = S.w.endAt - performance.now();
+    if (left <= 0) { endRound(); return; }
+    const s = Math.ceil(left / 1000);
+    setV('time', s);
+    const c = document.getElementById('c-time'); if (c) c.classList.toggle('low', s <= 10);
+  }
+  function stopRound() { clearInterval(S.w.timer); S.w.running = false; }
+  function endRound() {
+    const w = S.w;
+    stopRound(); clearHints(); setV('time', 0);
+    const res = { letters: w.letters, words: w.words, acc: accuracy() };
+    const record = w.letters > 0 && (!w.best || w.letters > w.best.letters);
+    const prev = w.best;
+    if (record) { w.best = res; store.set('bestRound', res); }
+    sfx.fanfare();
+    [0, 300].forEach((t) => setTimeout(() => burst(W / 2, H * 0.45, { count: 60, emoji: record ? '🥚' : '⭐', power: 1.3 }), t));
+    const chips = `<div class="res">${chip('r-w', 'Sanat', res.words)}${chip('r-l', 'Kirjaimet', res.letters)}${chip('r-a', 'Tarkkuus', res.acc === null ? '–' : res.acc + ' %')}</div>`;
+    const msg = record
+      ? (prev ? `<p>Edellinen ennätys oli ${prev.letters} kirjainta. Aapiskukko muni kultamunan!</p>` : `<p>Ensimmäinen tulos tällä laitteella. Aapiskukko muni kultamunan!</p>`)
+      : (w.best ? `<p>Paras tulos tällä laitteella: <strong>${w.best.letters} kirjainta</strong>.</p>` : '<p>Yritä uudestaan!</p>');
+    showOverlay(`<h2>${record ? 'Uusi ennätys!' : 'Aika loppui!'}</h2>${chips}${msg}
+      <div class="acts"><button type="button" class="big" data-act="start">Uusi kierros</button></div>`, 1200);
+  }
+  function startCard() {
+    const b = S.w.best;
+    showOverlay(`<h2>Kirjoita sana</h2>
+      <p>Kirjoita kuvan sana. Jokainen oikea kirjain on piste, ja aikaa on yksi minuutti.</p>
+      ${b ? `<p>Paras tulos tällä laitteella: <strong>${b.letters} kirjainta</strong>, ${b.words} sanaa.</p>` : ''}
+      <div class="acts"><button type="button" class="big" data-act="start">Aloita</button></div>
+      <p class="fine">tai paina välilyöntiä</p>`, 0);
+  }
+  function doWords(ch) {
+    const w = S.w;
+    if (!w.running || w.wait || isDigit(ch)) return;
+    const word = [...w.cur[0]], need = up(word[w.pos]), els = tiles.children;
+    if (ch === need) {
+      w.letters++;
+      els[w.pos].classList.remove('cur'); els[w.pos].classList.add('done');
+      w.pos++; clearHints(); sfx.letter(ch);
+      if (w.pos >= word.length) {
+        w.words++; w.wait = true; sfx.word();
+        const c = centerOf(tiles); burst(c.x, c.y, { count: 50, emoji: w.cur[1] });
+        setTimeout(() => { if (S.w.running) nextWord(); }, 420);
+      } else {
+        els[w.pos].classList.add('cur');
+      }
+    } else {
+      w.wrong++; sfx.bad(); shake(els[w.pos]); hintKey(need);
+    }
+    updateStats();
+  }
+
+  /* ---------- päällyskortti ---------- */
+  function showOverlay(html, lockMs) { card.innerHTML = html; overlay.hidden = false; S.overlayLock = performance.now() + (lockMs || 0); }
+  function hideOverlay() { overlay.hidden = true; }
+  overlay.addEventListener('click', (e) => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act); });
+  function act(a) {
+    if (a === 'start') { if (performance.now() >= S.overlayLock) startRound(); }
+    else if (a === 'close') hideOverlay();
+    else if (a === 'reset') {
+      hideOverlay(); S.found.clear(); S.presses = 0; S.rot = {};
+      markKeys(); updateStats();
+    }
+  }
+
+  /* ---------- syöte ---------- */
+  function input(ch, origin) {
+    audio();
+    if (!overlay.hidden) {
+      if (S.mode === 'free' && performance.now() >= S.overlayLock) hideOverlay();
+      else return;
+    }
+    flashKey(ch);
+    if (S.mode === 'free') doFree(ch, origin);
+    else if (S.mode === 'find') doFind(ch);
+    else doWords(ch);
+  }
+  function spaceOrEnter() {
+    audio();
+    if (!overlay.hidden) {
+      if (performance.now() < S.overlayLock) return;
+      if (S.mode === 'words' && !S.w.running) startRound(); else hideOverlay();
+      return;
+    }
+    if (S.mode === 'free') doFree(rand(ALPHA));
+    else if (S.mode === 'words' && !S.w.running) startRound();
+  }
+  const CODE_FALLBACK = { Semicolon: 'Ö', Quote: 'Ä', BracketLeft: 'Å' }; // suomalaiset näppäinpaikat muulla asettelulla
+  function keyToChar(e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return null;
+    const k = e.key;
+    if (k && k.length === 1) {
+      const u = up(k);
+      if (ALPHA.includes(u)) return u;
+      if (isDigit(k)) return k;
+    }
+    if (e.code && CODE_FALLBACK[e.code]) return CODE_FALLBACK[e.code];
+    if (e.code && /^Digit[0-9]$/.test(e.code)) return e.code.slice(5);
+    return null;
+  }
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab' || e.key === 'Escape') return;
+    const onControl = e.target && e.target.closest && e.target.closest('button');
+    if (e.key === ' ' || e.key === 'Enter') {
+      if (onControl) return; // anna painikkeiden toimia näppäimistöllä
+      e.preventDefault();
+      if (!e.repeat) spaceOrEnter();
+      return;
+    }
+    const ch = keyToChar(e);
+    if (!ch) return;
+    e.preventDefault();
+    if (e.repeat) return; // pohjassa pidetty nappi ei tulvi ruutua
+    input(ch);
+  });
+  stage.addEventListener('pointerdown', (e) => {
+    if (S.mode !== 'free' || e.target.closest('.overlay')) return;
+    const s = stage.getBoundingClientRect();
+    input(rand(ALPHA), { x: e.clientX - s.left, y: e.clientY - s.top });
+  });
+  document.addEventListener('click', (e) => { // hiirellä painettu nappi ei jää välilyönnin kohteeksi
+    const b = e.target.closest && e.target.closest('button');
+    if (b && e.detail > 0) b.blur();
+  });
+
+  /* ---------- fokusvihje (upotettuna sivu ei saa näppäimiä ennen klikkausta) ---------- */
+  function focusState() { document.body.classList.toggle('nofocus', !document.hasFocus()); }
+  window.addEventListener('focus', focusState); window.addEventListener('blur', focusState);
+  focusState();
+
+  /* ---------- työkalut ---------- */
+  function syncTools() {
+    caseLbl.textContent = S.upper ? 'ABC' : 'abc';
+    btnSound.setAttribute('aria-pressed', String(S.sound));
+    btnSpeech.setAttribute('aria-pressed', String(S.speech));
+  }
+  btnCase.addEventListener('click', () => {
+    S.upper = !S.upper; store.set('upper', S.upper);
+    syncTools(); keyLabels(); renderView();
+    if (S.mode === 'words' && S.w.cur) renderTiles();
+  });
+  btnSound.addEventListener('click', () => { S.sound = !S.sound; store.set('sound', S.sound); syncTools(); if (S.sound) sfx.good(); });
+  btnSpeech.addEventListener('click', () => { S.speech = !S.speech; store.set('speech', S.speech); syncTools(); if (S.speech) say('Hei! Paina kirjainta.'); });
+  if (!document.fullscreenEnabled) btnFull.hidden = true;
+  btnFull.addEventListener('click', () => {
+    try {
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      else root.requestFullscreen().catch(() => {});
+    } catch (e) {}
+  });
+
+  /* ---------- tilat ---------- */
+  function setMode(m) {
+    if (S.w.running) stopRound();
+    clearTimeout(S.f.hintT); clearHints(); hideOverlay();
+    S.mode = m; store.set('mode', m);
+    tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.mode === m)));
+    digitRow.hidden = m !== 'free';
+    markKeys(); renderStats();
+    if (m === 'free') {
+      prompt.textContent = 'Paina mitä tahansa kirjainta tai numeroa';
+      letterView.hidden = false; wordView.hidden = true;
+      if (!S.freeView) S.freeView = { kind: 'letter', ch: 'A', pick: pickFor('A') };
+      S.view = S.freeView; renderView(); pop(block);
+    } else if (m === 'find') {
+      prompt.textContent = 'Etsi tämä kirjain näppäimistöltä';
+      letterView.hidden = false; wordView.hidden = true;
+      S.f.target = null; S.f.streak = 0; newTarget(); updateStats();
+    } else {
+      prompt.textContent = 'Kirjoita kuvan sana';
+      letterView.hidden = true; wordView.hidden = false;
+      if (!S.w.cur) { S.w.list = shuffle(WORDS.slice()); S.w.cur = S.w.list.pop(); }
+      S.w.pos = 0; renderTiles(); startCard();
+    }
+  }
+  tabs.forEach((t) => t.addEventListener('click', () => { if (t.dataset.mode !== S.mode) setMode(t.dataset.mode); }));
+
+  syncTools(); keyLabels();
+  const saved = store.get('mode', 'free');
+  setMode(['free', 'find', 'words'].includes(saved) ? saved : 'free');
+})();
+</script>
+</body>
+</html>
