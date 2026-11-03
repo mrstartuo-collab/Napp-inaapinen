@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sormikartta – Näppäinaapinen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@500;700;800&display=swap">
+<style>
+/* Tulostettava sormikartta A4 vaakaan. Värit samat kuin pelin Sormikoulussa. */
+:root{
+  --ink:#14243C; --muted:#485C79; --line:#A8C1D7; --paper:#FFFFFF; --soft:#EEF5FB;
+  --fp:#D2468F; --fr:#2F7BD0; --fm:#159A85; --fi:#EE8420; --ft:#7D8AA0;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --letter:"Andika","Verdana",system-ui,sans-serif;
+  color-scheme:light;
+}
+@page{size:A4 landscape;margin:10mm}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--display);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.sheet{width:277mm;margin:0 auto;padding:2mm;display:grid;grid-template-rows:auto auto auto;gap:4mm}
+header{display:flex;align-items:center;gap:4mm}
+header svg{width:18mm;height:18mm;flex:none}
+h1{margin:0;font:800 30pt/1 var(--display)}
+h1 span{color:#DE4336}
+.sub{margin:1mm 0 0;font:600 12pt/1.2 var(--display);color:var(--muted)}
+.name{margin-left:auto;font:700 13pt var(--display);white-space:nowrap}
+.name i{display:inline-block;width:62mm;border-bottom:1.5pt solid var(--ink);margin-left:2mm}
+.kb{display:flex;flex-direction:column;gap:1.4mm;align-items:center}
+.row{display:flex;gap:1.4mm}
+.k{width:15mm;height:12.5mm;border-radius:2.6mm;display:grid;place-items:center;position:relative;
+  font:700 15pt/1 var(--letter);color:var(--ink);
+  background:color-mix(in srgb, var(--fc) 26%, #FFFFFF);border:0.6mm solid color-mix(in srgb, var(--fc) 70%, #FFFFFF);border-bottom-width:1.6mm}
+.k.home{border-color:var(--fc);box-shadow:inset 0 0 0 0.5mm #FFFFFF}
+.k.bump::after{content:"";position:absolute;bottom:2.2mm;left:50%;width:4.5mm;height:0.7mm;border-radius:0.4mm;background:var(--ink);transform:translateX(-50%)}
+.k.sym{font:700 14pt var(--display);color:var(--muted)}
+.k.space{width:100mm;font:700 11pt var(--display)}
+.r0{transform:translateX(-16.4mm)}.r2{transform:translateX(4.1mm)}.r3{transform:translateX(-4.1mm)}
+.bottom{display:grid;grid-template-columns:1.05fr 1fr;gap:6mm;align-items:start}
+.hands{width:100%;height:auto;max-height:56mm}
+.hands .palm{fill:#FFFFFF;stroke:var(--muted);stroke-width:2.5}
+.hands .fgr{stroke:var(--muted);stroke-width:2.5}
+.hands .fk{font:700 17px var(--letter);fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+.hands .bumpm{fill:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:2mm 5mm;margin:0 0 3mm;font:700 11pt var(--display)}
+.legend span{display:inline-flex;align-items:center;gap:1.6mm}
+.legend i{width:4mm;height:4mm;border-radius:1mm;background:var(--fc)}
+h2{margin:0 0 2mm;font:800 14pt var(--display)}
+ul{margin:0;padding:0;list-style:none;display:grid;gap:1.6mm}
+li{background:var(--soft);border-radius:2mm;padding:1.2mm 3mm;font:500 10pt/1.25 var(--display)}
+li b{font-weight:800}
+.tip{margin:2.5mm 0 0;font:600 10.5pt/1.35 var(--display);color:var(--muted)}
+.print{position:fixed;right:16px;bottom:16px;border:0;border-radius:999px;padding:12px 22px;background:#2F9C52;color:#FFFFFF;font:800 16px var(--display);cursor:pointer;box-shadow:0 4px 0 #1E6A37}
+@media print{.print{display:none}}
+@media screen and (max-width:1100px){body{padding:12px}.sheet{transform-origin:top left;zoom:.6}}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M30 62 C 10 58, 5 34, 17 21 C 20 38, 26 48, 37 53 Z" fill="#2A6ECB"/>
+      <path d="M32 59 C 15 46, 18 23, 32 12 C 30 29, 34 42, 43 49 Z" fill="#2F9C52"/>
+      <path d="M37 57 C 28 40, 36 21, 50 16 C 44 31, 44 42, 49 49 Z" fill="#F2AE1C"/>
+      <path d="M56 82 L53 94 M53 94 L46 96 M53 94 L58 97 M66 82 L67 94 M67 94 L61 96 M67 94 L73 97" fill="none" stroke="#E8A21E" stroke-width="3" stroke-linecap="round"/>
+      <path d="M70 48 C 72 40, 70 33, 73 26 L 85 30 C 83 39, 83 49, 79 58 Z" fill="#FFFDF6" stroke="#2B2B3A" stroke-width="2.2"/>
+      <ellipse cx="60" cy="65" rx="25" ry="19" fill="#FFFDF6" stroke="#2B2B3A" stroke-width="2.2"/>
+      <path d="M47 63 C 53 53, 70 55, 72 65 C 66 75, 54 75, 47 63 Z" fill="#E97325" stroke="#2B2B3A" stroke-width="2"/>
+      <circle cx="79" cy="27" r="10" fill="#FFFDF6" stroke="#2B2B3A" stroke-width="2.2"/>
+      <path d="M70 20 C 69 12, 76 11, 76 17 C 77 10, 84 10, 83 17 C 86 12, 91 15, 88 22 Z" fill="#DE4336" stroke="#2B2B3A" stroke-width="1.6"/>
+      <path d="M88 25 L98 29 L88 32 Z" fill="#F2AE1C" stroke="#2B2B3A" stroke-width="1.4"/>
+      <path d="M86 33 C 89 40, 82 43, 82 36 Z" fill="#DE4336"/>
+      <circle cx="81" cy="25" r="2.3" fill="#2B2B3A"/>
+    </svg>
+    <div><h1>Sormi<span>kartta</span></h1><p class="sub">Kymmensormijärjestelmä suomalaisella näppäimistöllä · Näppäinaapinen</p></div>
+    <div class="name">Nimi<i></i></div>
+  </header>
+
+  <div class="kb" id="kb"></div>
+
+  <div class="bottom">
+    <div>
+      <div class="legend">
+        <span style="--fc:var(--fp)"><i></i>pikkusormi</span><span style="--fc:var(--fr)"><i></i>nimetön</span>
+        <span style="--fc:var(--fm)"><i></i>keskisormi</span><span style="--fc:var(--fi)"><i></i>etusormi</span>
+        <span style="--fc:var(--ft)"><i></i>peukalo</span>
+      </div>
+      <svg class="hands" id="hands" viewBox="0 0 520 236" role="img" aria-label="Kädet perusrivillä"></svg>
+    </div>
+    <div>
+      <h2>Ennen kuin aloitat</h2>
+      <ul>
+        <li><b>Jalat</b> lattialla. Jos eivät ylety, laita jakkara jalkojen alle.</li>
+        <li><b>Selkä</b> suorana. Istu niin, että G ja H ovat keskellä edessäsi.</li>
+        <li><b>Kyynärpäät</b> rennosti kylkien vieressä, <b>ranteet</b> suorina.</li>
+        <li><b>Sormet</b> kaarella perusrivillä: A S D F ja J K L Ö.</li>
+        <li><b>Etusormet</b> tunnustelevat F:n ja J:n pienet kohoumat.</li>
+        <li><b>Peukalot</b> lepäävät välilyönnillä.</li>
+      </ul>
+      <p class="tip">Sormi palaa aina takaisin perusriville. Tarkkuus ensin, vauhti tulee perässä. Lyhyt harjoitus useana päivänä on parempi kuin pitkä kerran viikossa.</p>
+    </div>
+  </div>
+</div>
+<button class="print" type="button" onclick="window.print()">Tulosta</button>
+<script>
+(() => {
+  const FINGER = {};
+  [['L5', '1QAZ<'], ['L4', '2WSX'], ['L3', '3EDC'], ['L2', '45RTFGVB'], ['R2', '67YUHJNM'], ['R3', '8IK,'], ['R4', '9OL.'], ['R5', '0PÅÖÄ-']]
+    .forEach(([f, ks]) => [...ks].forEach((k) => { FINGER[k] = f; }));
+  const VAR = { L5: '--fp', R5: '--fp', L4: '--fr', R4: '--fr', L3: '--fm', R3: '--fm', L2: '--fi', R2: '--fi', T: '--ft' };
+  const HOME = 'ASDFJKLÖ', SYM = '<,.-';
+  const ROWS = [['r0', '1234567890'], ['r1', 'QWERTYUIOPÅ'], ['r2', 'ASDFGHJKLÖÄ'], ['r3', '<ZXCVBNM,.-']];
+  const kb = document.getElementById('kb');
+  ROWS.forEach(([cls, keys]) => {
+    const row = document.createElement('div'); row.className = 'row ' + cls;
+    [...keys].forEach((k) => {
+      const d = document.createElement('div');
+      d.className = 'k' + (HOME.includes(k) ? ' home' : '') + (k === 'F' || k === 'J' ? ' bump' : '') + (SYM.includes(k) ? ' sym' : '');
+      d.style.setProperty('--fc', `var(${VAR[FINGER[k]]})`);
+      d.textContent = k; row.appendChild(d);
+    });
+    kb.appendChild(row);
+  });
+  const sp = document.createElement('div'); sp.className = 'row';
+  sp.innerHTML = '<div class="k space" style="--fc:var(--ft)">välilyönti · peukalo</div>'; kb.appendChild(sp);
+
+  const HOME_OF = { L5: 'A', L4: 'S', L3: 'D', L2: 'F', R2: 'J', R3: 'K', R4: 'L', R5: 'Ö' };
+  const left = [['L5', 70, 58], ['L4', 108, 76], ['L3', 146, 86], ['L2', 184, 76]], base = 150, fw = 32;
+  let s = '<rect class="palm" x="52" y="134" width="166" height="90" rx="40"/><rect class="palm" x="302" y="134" width="166" height="90" rx="40"/>';
+  const finger = (id, x, len) => {
+    const top = base - len;
+    const bump = (id === 'L2' || id === 'R2') ? `<rect class="bumpm" x="${x - 6}" y="${top + 34}" width="12" height="3" rx="1.5"/>` : '';
+    return `<g><rect class="fgr" style="fill:color-mix(in srgb, var(${VAR[id]}) 45%, #FFFFFF)" x="${x - fw / 2}" y="${top}" width="${fw}" height="${len + 26}" rx="${fw / 2}"/><text class="fk" x="${x}" y="${top + 19}">${HOME_OF[id]}</text>${bump}</g>`;
+  };
+  left.forEach(([id, x, len]) => { s += finger(id, x, len); });
+  left.forEach(([id, x, len]) => { s += finger('R' + id[1], 520 - x, len); });
+  s += '<rect class="fgr" style="fill:color-mix(in srgb, var(--ft) 45%, #FFFFFF)" x="208" y="152" width="30" height="66" rx="15" transform="rotate(-52 223 185)"/><rect class="fgr" style="fill:color-mix(in srgb, var(--ft) 45%, #FFFFFF)" x="282" y="152" width="30" height="66" rx="15" transform="rotate(52 297 185)"/>';
+  document.getElementById('hands').innerHTML = s;
+})();
+</script>
+</body>
+</html>
